@@ -1,0 +1,18 @@
+# python
+__pycache__/
+*.py[cod]
+*.so
+*.egg-info/
+dist/
+build/
+
+# sphinx
+docs/_build/
+docs/_templates/
+docs/_static/
+docs/api/
+
+# miscellaneous
+*.DS_Store
+*.bak
+*.swp
