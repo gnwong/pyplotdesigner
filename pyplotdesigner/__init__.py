@@ -23,6 +23,6 @@ from .plot_description import PlotDescription
 from .plot_element import PlotElement
 from .plot_axis import PlotAxis
 from .plot_text import PlotText
-from .plot_constraint import PlotConstraint
+
 
 __all__ = ['PlotDescription', 'PlotElement', 'PlotAxis', 'PlotText']

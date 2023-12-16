@@ -32,7 +32,7 @@ class PlotElement(ABC):
     :arg x0: left x-coordinate of the element's location
     :arg y0: bottom y-coordinate of the element's location
     """
-    
+
     def __init__(self, name, x0, y0):
         self.name = name
         self.x0 = x0
@@ -52,15 +52,15 @@ class PlotElement(ABC):
     @abstractmethod
     def move(self, loc, tx, ty):
         pass
-    
+
     @abstractmethod
     def resize(self, loc, tx, ty):
         pass
-    
+
     """
     def updateDimension(self, loc, tdim):
         raise Exception('TODO unimplemented')
-    
+
     def _getTargetLocationFromConstraint(self, constraint):
         raise Exception('TODO unimplemented')
         tx = None
@@ -74,7 +74,7 @@ class PlotElement(ABC):
         if 'w' in constraint.ploc:
             tx = constraint.value
         return (tx, ty)
-    
+
     def _getTargetDimensionFromConstraint(self, constraint):
         raise Exception('TODO unimplemented')
         if 'n' in constraint.ploc or 's' in constraint.ploc:

@@ -21,22 +21,49 @@ THE SOFTWARE.
 
 
 class EqualizeNetwork:
+    """
+    Collection of networks containing equalize constraints. Each network
+    represents a set of elements that are reflexively equalized. Networks
+    with the same orientation and shared elements are merged together.
+    """
 
-
-    ## TODO clean up
     class _Network:
+        """
+        Private class for storing a network of equalize constraints. Supports
+        merging with other networks if they have the same orientation and share
+        elements. Contains a list of constraints with ratios between dimensions 
+        of elements that can be solved for the final dimensions of the elements.
+        """
+
         def __init__(self, constraint):
-            if constraint.ploc in ['n', 's']:
+            """
+            Create a new network from a single constraint.
+
+            :arg constraint: Equalize constraint to add to the network
+            """
+
+            if constraint.parent_anchor in ['n', 's']:
                 self.orientation = 'width'
-            elif constraint.ploc in ['w', 'e']:
+            elif constraint.parent_anchor in ['w', 'e']:
                 self.orientation = 'height'
             else:
-                raise Exception('Equalize constraint must have n,s,w,e ploc')
+                raise Exception('Equalize constraint must have n,s,w,e parent anchor')
+
             self.elements = [constraint.parent, constraint.child]
             self.constraints = [constraint]
+
         def merge(self, network):
+            """
+            Merge two networks if they have the same orientation and share elements.
+
+            :arg network: Network to merge into this one
+
+            :returns: True if the networks were merged, False otherwise
+            """
+
             if self.orientation != network.orientation:
                 return False
+
             if not set(self.elements).isdisjoint(network.elements):
                 for element in network.elements:
                     if element not in self.elements:
@@ -45,52 +72,75 @@ class EqualizeNetwork:
                     if constraint not in self.constraints:
                         self.constraints.append(constraint)
                 return True
+
             return False
+
     def __init__(self):
         self.networks = []
-    def mergeNetworks(self):
-        changed = False
-        newNetworks = []
+
+    def merge_networks(self):
+        """
+        Iterate through networks merging where possible.
+        """
+        new_networks = []
         for network in self.networks:
             skip = False
-            for nnetwork in newNetworks:
-                if nnetwork.merge(network):
+            for new_network in new_networks:
+                if new_network.merge(network):
                     skip = True
                     break
             if not skip:
-                newNetworks.append(network)
-        self.networks = newNetworks
-    def addConstraint(self, constraint):
+                new_networks.append(network)
+        self.networks = new_networks
+
+    def add_constraint(self, constraint):
+        """
+        Add a constraint to the networks.
+
+        :arg constraint: Equalize constraint to be added
+        """
         self.networks.append(self._Network(constraint))
-        self.mergeNetworks()
-    def getUpdateList(self):
+        self.merge_networks()
+
+    def get_update_list(self):
+        """
+        Attempt solve of dimensions for each network and return a list of how
+        each element should be resized to satisfy solution.
+        """
+
         updates = []
+
         for network in self.networks:
-            elementScales = {}
+
+            element_scales = {}
             constraints = [c for c in network.constraints]
             constraint = constraints.pop(0)
-            elementScales[constraint.parent] = 1.
-            elementScales[constraint.child] = constraint.value
+            element_scales[constraint.parent] = 1.
+            element_scales[constraint.child] = constraint.value
+
             for _ in range(len(constraints)):
                 constraint = constraints.pop(0)
-                if constraint.parent in elementScales:
-                    if constraint.child in elementScales:
+                if constraint.parent in element_scales:
+                    if constraint.child in element_scales:
                         raise Exception('Multiple dependencies for equalize size')
-                    elementScales[constraint.child] = elementScales[constraint.parent] * constraint.value
-                elif constraint.child in elementScales:
-                    elementScales[constraint.parent] = elementScales[constraint.child] / constraint.value
+                    element_scales[constraint.child] = element_scales[constraint.parent] * constraint.value
+                elif constraint.child in element_scales:
+                    element_scales[constraint.parent] = element_scales[constraint.child] / constraint.value
                 else:
                     constraints.append(constraint)
                 if len(constraints) == 0:
                     break
-            elementNorm = sum([elementScales[key] for key in elementScales])
-            elementActual = None
+
+            element_norm = sum([element_scales[key] for key in element_scales])
+            element_actual = None
+
             if network.orientation == 'width':
-                elementActual = sum([key.w for key in elementScales])
-                for key in elementScales:
-                    updates.append([key, 'n', elementScales[key] / elementNorm * elementActual])
+                element_actual = sum([key.width for key in element_scales])
+                for key in element_scales:
+                    updates.append([key, 'n', element_scales[key] / element_norm * element_actual])
             elif network.orientation == 'height':
-                elementActual = sum([key.h for key in elementScales])
-                for key in elementScales:
-                    updates.append([key, 'w', elementScales[key] / elementNorm * elementActual])
+                element_actual = sum([key.height for key in element_scales])
+                for key in element_scales:
+                    updates.append([key, 'w', element_scales[key] / element_norm * element_actual])
+
         return updates
