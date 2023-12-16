@@ -131,6 +131,10 @@ class PlotAxis(PlotElement):
                 self.height = self.y0 - ty + self.height
                 self.y0 = ty
                 self._y0l = lock
+        if self.width < 0:
+            self.width = 0
+        if self.height < 0:
+            self.height = 0
 
     def update_dimension(self, loc, tdim):
         # TODO maybe move to PlotElement?
