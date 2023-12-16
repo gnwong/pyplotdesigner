@@ -24,32 +24,59 @@ class PlotConstraint:
     """
     Relationship between two plot elements. The parent element is used to
     determine how the child should be modified to satisfy the constraint.
-
-    If the parent element is None, the full Plot is used as the parent.
+    If the parent element is ``None``, the full figure is used as the parent.
 
     Constraints may be between any two of:
-        PlotElements (e.g., for copying dimensions)
-        anchor points on PlotElements (e.g., for setting spacings)
+
+        * :class:`PlotElement` (e.g., for copying dimensions)
+        * anchor points on :class:`PlotElement` (e.g., for setting spacings)
 
     Valid anchor points are:
-    - n: north edge
-    - s: south edge
-    - w: west edge
-    - e: east edge
-    - nw: northwest corner
-    - ne: northeast corner
-    - sw: southwest corner
-    - se: southeast corner
+
+        * ``n`` - north edge
+        * ``s`` - south edge
+        * ``w`` - west edge
+        * ``e`` - east edge
+        * ``nw`` - northwest corner
+        * ``ne`` - northeast corner
+        * ``sw`` - southwest corner
+        * ``se`` - southeast corner
 
     Constraints will be satisfied by performing one of the following "constraint
     type" operations:
-    - move: translate child element keeping same dimensions
-    - resize: resize child element keeping same location for non-anchored edges
+
+        * ``move`` - translate child element keeping same dimensions
+        * ``resize`` - resize child element keeping same location for non-anchored edges
 
     Constraints are defined by one of the following "constraint type" strings:
-    - separation: translate child element until separation of :arg value: attained
-    - duplicate: duplicate dimension to child element
-    - equalize: reflexively equalize dimensions until ratio=value attained
+
+        * ``separation`` - translate child element until separation of ``value`` attained
+        * ``duplicate`` - duplicate dimension to child element
+        * ``equalize`` - reflexively equalize dimensions until ratio of ``value`` attained
+
+    .. attribute:: parent
+
+        parent element or ``None`` for full figure used as reference for constraint
+
+    .. attribute:: child
+
+        child element that will be modified to satisfy the constraint
+
+    .. attribute:: parent_anchor
+
+        anchor point on parent element
+
+    .. attribute:: child_anchor
+
+        anchor point on child element
+
+    .. attribute:: constraint
+
+        constraint string (operation and type)
+
+    .. attribute:: value
+
+        value to be used in evaluating the constraint if applicable
     """
 
     _constraint_map = {
@@ -62,30 +89,20 @@ class PlotConstraint:
 
     _valid_anchor_points = ['n', 's', 'w', 'e', 'nw', 'ne', 'sw', 'se']
 
-    def __init__(self, parent, child, parent_anchor, child_anchor, constraint_type, value):
-        """
-        Create a constraint between two plot elements.
-
-        :arg parent: parent element
-        :arg child: child element
-        :arg parent_anchor: anchor point on parent element
-        :arg child_anchor: anchor point on child element
-        :arg constraint_type: type of constraint (both type and operation)
-        :arg value: value to use for constraint
-        """
+    def __init__(self, parent, child, parent_anchor, child_anchor, constraint, value):
 
         if parent_anchor not in PlotConstraint._valid_anchor_points:
             raise Exception(f'Invalid parent anchor {parent_anchor}')
         if child_anchor not in PlotConstraint._valid_anchor_points:
             raise Exception(f'Invalid child anchor {child_anchor}')
 
-        constraint = PlotConstraint._standardize_constraint_type(constraint_type)
+        constraint_type = PlotConstraint._standardize_constraint_type(constraint)
 
-        remaining_constraint = constraint
+        remaining_constraint = constraint_type
         for valid_constraint in PlotConstraint._constraint_map.values():
             remaining_constraint = remaining_constraint.replace(valid_constraint, '')
         if len(remaining_constraint.strip()) > 0:
-            raise Exception(f'Invalid constraint type {constraint_type}')
+            raise Exception(f'Invalid constraint type {constraint}')
 
         # TODO verify valid parent/child type for ctype
 
@@ -94,7 +111,7 @@ class PlotConstraint:
         self.parent_anchor = parent_anchor.lower()
         self.child_anchor = child_anchor.lower()
         self.value = value
-        self.constraint = constraint
+        self.constraint = constraint_type
 
     def __repr__(self):
         parent = self.parent.name if hasattr(self.parent, 'name') else self.parent
@@ -112,9 +129,9 @@ class PlotConstraint:
         """
         Get the target location for how to adjust the child element to satisfy this constraint.
 
-        :arg relative_element: Element to use as the reference for the target location
+        :arg relative_element: reference for the target or full figure if ``None``
 
-        :returns: (tx, ty) target location
+        :returns: (``target_x``, ``target_y`) target location
         """
 
         tx = None
@@ -136,7 +153,7 @@ class PlotConstraint:
         """
         Get the target dimension for how to adjust the child element to satisfy this constraint.
 
-        :arg relative_element: Element to use as the reference for the target dimension
+        :arg relative_element: reference for the target dimension
 
         :returns: target dimension  ## TODO more detail, note None
         """
@@ -152,9 +169,9 @@ class PlotConstraint:
         """
         Attempt to apply this constraint to the child element. If this is an
         equalize constraint, return self so that the constraint can be input
-        into the EqualizerNetwork.
+        into the :class:`EqualizeNetwork`.
 
-        :arg plot_description: PlotDescription container in which to apply the constraint
+        :arg plot_description: :class:`PlotDescription` container in which to apply the constraint
         """
 
         if 'e' in self.constraint:

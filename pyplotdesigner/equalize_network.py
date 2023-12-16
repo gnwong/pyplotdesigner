@@ -31,17 +31,16 @@ class EqualizeNetwork:
         """
         Private class for storing a network of equalize constraints. Supports
         merging with other networks if they have the same orientation and share
-        elements. Contains a list of constraints with ratios between dimensions 
+        elements. Contains a list of constraints with ratios between dimensions
         of elements that can be solved for the final dimensions of the elements.
+
+        .. attribute:: orientation
+
+            horizontal or vertical depending on whether the subnetwork should
+            be equalized in widths or heights.
         """
 
         def __init__(self, constraint):
-            """
-            Create a new network from a single constraint.
-
-            :arg constraint: Equalize constraint to add to the network
-            """
-
             if constraint.parent_anchor in ['n', 's']:
                 self.orientation = 'width'
             elif constraint.parent_anchor in ['w', 'e']:
@@ -56,9 +55,9 @@ class EqualizeNetwork:
             """
             Merge two networks if they have the same orientation and share elements.
 
-            :arg network: Network to merge into this one
+            :arg network: network to merge into this one
 
-            :returns: True if the networks were merged, False otherwise
+            :returns: ``True`` if the networks were merged, ``False`` otherwise
             """
 
             if self.orientation != network.orientation:
@@ -97,15 +96,16 @@ class EqualizeNetwork:
         """
         Add a constraint to the networks.
 
-        :arg constraint: Equalize constraint to be added
+        :arg constraint: equalize constraint to be included in solve
         """
         self.networks.append(self._Network(constraint))
         self.merge_networks()
 
     def get_update_list(self):
         """
-        Attempt solve of dimensions for each network and return a list of how
-        each element should be resized to satisfy solution.
+        Attempt solve for dimensions in each independent network.
+
+        :returns: list of updates from solve (``plot_element``, ``anchor``, ``value``)
         """
 
         updates = []
