@@ -19,16 +19,18 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 THE SOFTWARE.
 """
 
+from abc import ABC, abstractmethod
 
-class PlotElement:
+
+class PlotElement(ABC):
     """
     A plot element is any object that can be placed on a plot. It minimally
     has a name and a location. Its subclasses determine how it can be moved
     and what its location means.
 
     :arg name: name of the element
-    :arg x0: x-coordinate of the element's location
-    :arg y0: y-coordinate of the element's location
+    :arg x0: left x-coordinate of the element's location
+    :arg y0: bottom y-coordinate of the element's location
     """
     
     def __init__(self, name, x0, y0):
@@ -38,16 +40,24 @@ class PlotElement:
         self._x0l = 0
         self._y0l = 0
 
-    def resetLocks(self, state=0):
+    def _reset_locks(self, state=0):
+        """
+        Reset all locks to a given state.
+
+        :arg state: State to reset locks to
+        """
         self._x0l = state
         self._y0l = state
 
+    @abstractmethod
     def move(self, loc, tx, ty):
-        raise Exception('TODO unimplemented')
+        pass
     
+    @abstractmethod
     def resize(self, loc, tx, ty):
-        raise Exception('TODO unimplemented')
+        pass
     
+    """
     def updateDimension(self, loc, tdim):
         raise Exception('TODO unimplemented')
     
@@ -72,3 +82,4 @@ class PlotElement:
         elif 'w' in constraint.ploc or 'e' in constraint.ploc:
             return self.h * constraint.value
         return None
+        """

@@ -6,6 +6,9 @@ __pycache__/
 dist/
 build/
 
+# jupyter
+*.ipynb_checkpoints/
+
 # sphinx
 docs/_build/
 docs/_templates/
@@ -16,3 +19,4 @@ docs/api/
 *.DS_Store
 *.bak
 *.swp
+*.png
