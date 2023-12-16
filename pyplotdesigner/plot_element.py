@@ -24,13 +24,21 @@ from abc import ABC, abstractmethod
 
 class PlotElement(ABC):
     """
-    A plot element is any object that can be placed on a plot. It minimally
-    has a name and a location. Its subclasses determine how it can be moved
-    and what its location means.
+    Abstract class representing any object that can be placed on a plot. It minimally
+    has a name and a location. Its subclasses determine how it can be moved and what
+    its location means.
 
-    :arg name: name of the element
-    :arg x0: left x-coordinate of the element's location
-    :arg y0: bottom y-coordinate of the element's location
+    .. attribute:: name
+
+        name of the element used when generating python code and for internal bookkeeping
+
+    .. attribute:: x0
+
+        left x-coordinate of the element's location
+
+    .. attribute:: y0
+
+        bottom y-coordinate of the element's location
     """
 
     def __init__(self, name, x0, y0):
@@ -44,42 +52,19 @@ class PlotElement(ABC):
         """
         Reset all locks to a given state.
 
-        :arg state: State to reset locks to
+        :arg state: state to reset locks to
         """
         self._x0l = state
         self._y0l = state
 
     @abstractmethod
-    def move(self, loc, tx, ty):
+    def move(self, anchor, target_x, target_y):
         pass
 
     @abstractmethod
-    def resize(self, loc, tx, ty):
+    def resize(self, anchor, target_x, target_y):
         pass
 
-    """
-    def updateDimension(self, loc, tdim):
-        raise Exception('TODO unimplemented')
-
-    def _getTargetLocationFromConstraint(self, constraint):
-        raise Exception('TODO unimplemented')
-        tx = None
-        ty = None
-        if 'n' in constraint.ploc:
-            ty = self.h + constraint.value
-        if 's' in constraint.ploc:
-            ty = constraint.value
-        if 'e' in constraint.ploc:
-            tx = self.w + constraint.value
-        if 'w' in constraint.ploc:
-            tx = constraint.value
-        return (tx, ty)
-
-    def _getTargetDimensionFromConstraint(self, constraint):
-        raise Exception('TODO unimplemented')
-        if 'n' in constraint.ploc or 's' in constraint.ploc:
-            return self.w * constraint.value
-        elif 'w' in constraint.ploc or 'e' in constraint.ploc:
-            return self.h * constraint.value
-        return None
-        """
+    @abstractmethod
+    def update_dimension(self, anchor, target_dimension):
+        pass

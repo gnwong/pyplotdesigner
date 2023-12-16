@@ -28,25 +28,29 @@ from .plot_element import PlotElement
 from .plot_axis import PlotAxis
 from .plot_text import PlotText
 from .plot_constraint import PlotConstraint
-from .equalizer_network import EqualizeNetwork
+from .equalize_network import EqualizeNetwork
 
 
 class PlotDescription:
     """
     Collection of axes, text, and constraints that can be used to describe a
-    plot. PlotDescriptions are schematically similar to Figures and can be
-    rendered into them.
+    plot. A :class:`PlotDescription` is schematically similar to figures and
+    can be rendered into one.
+
+    .. attribute:: width
+
+        width of the final full plot. if rendering to matplotlib, likely to
+        be interpreted as inches.
+
+    .. attribute:: height
+
+        height of the final full plot. if rendering to matplotlib, likely to
+        be interpreted as inches.
     """
 
     _supported_versions = ['1']
 
     def __init__(self, width, height):
-        """
-        Create a new PlotDescription object with given dimension.
-
-        :arg width: Width of the plot in inches
-        :arg height: Height of the plot in inches
-        """
 
         self.width = width
         self.height = height
@@ -64,9 +68,9 @@ class PlotDescription:
     @classmethod
     def load(cls, fname):
         """
-        Load a PlotDescription from a file.
+        Load a :class:`PlotDescription` from a file.
 
-        :arg fname: Name of the file to load from
+        :arg fname: name of the file to load from
         """
 
         with open(fname, 'r') as fp:
@@ -91,12 +95,12 @@ class PlotDescription:
 
     def get_element(self, element, error=True):
         """
-        Get a PlotElement by name.
+        Get a :class:`PlotElement` by name or instance.
 
-        :arg name: Name or instance of element to be retrieved
-        :arg error: (default=True) Whether to raise an error if the element is not found
+        :arg name: name or instance of element to be retrieved
+        :arg error: whether to raise an error if the element is not found (default ``True``)
 
-        :returns: PlotElement with the given name or None if not found and error=False
+        :returns: :class:`PlotElement` with the given name or ``None`` if not found and ``error=False``
         """
 
         if element is None:
@@ -120,11 +124,11 @@ class PlotDescription:
 
     def get_unique_name(self, element):
         """
-        Get a unique name for a PlotElement based on its type.
+        Get a unique name for a :class:`PlotElement` based on its type.
 
-        :arg element: Type or instance of element to be named
+        :arg element: type or instance of element to be named
 
-        :returns: Unique name for the PlotElement
+        :returns: unique name for the :class:`PlotElement`
         """
 
         if element is PlotAxis or isinstance(element, PlotAxis):
@@ -141,13 +145,13 @@ class PlotDescription:
 
     def add_axis(self, *args, **kwargs):
         """
-        Add an axis. Input can be either a PlotAxis object or a list of
-        arguments to be passed to the PlotAxis constructor. For more
+        Add an axis. Input can be either a :class:`PlotAxis` object or a list of
+        arguments to be passed to the :class:`PlotAxis` constructor. For more
         information, see :class:`PlotAxis`.
 
-        :arg name: Name of the axis. If not provided, a unique name will be generated.
+        :arg name: keyword argument for name of the axis (if not provided, a unique name will be generated)
 
-        :returns: Reference to the new axis
+        :returns: reference to the new axis
         """
 
         if len(args) == 1 and isinstance(args[0], PlotAxis):
@@ -164,13 +168,13 @@ class PlotDescription:
 
     def add_text(self, *args, **kwargs):
         """
-        Add text element. Input can be either a PlotText object or a list
-        of arguments to be passed to the PlotText constructor. For more
+        Add text element. Input can be either a :class:`PlotText` object or a list
+        of arguments to be passed to the :class:`PlotText` constructor. For more
         information, see :class:`PlotText`.
 
-        :arg name: Name of the text element. If not provided, a unique name will be generated.
+        :arg name: keyword argument for name of the text element (if not provided, a unique name will be generated)
 
-        :returns: Reference to the new text element
+        :returns: reference to the new text element
         """
 
         if len(args) == 1 and isinstance(args[0], PlotText):
@@ -189,12 +193,12 @@ class PlotDescription:
         """
         Add a constraint. For more information, see :class:`PlotConstraint`.
 
-        :arg parents: Name of the parent element(s)
-        :arg children: Name of the child element(s)
-        :arg parent_anchor: Anchor point on the parent element
-        :arg child_anchor: Anchor point on the child element
-        :arg constraint_type: Type of constraint
-        :arg value: Value of the constraint
+        :arg parents: name of the parent element(s)
+        :arg children: name of the child element(s)
+        :arg parent_anchor: anchor point on the parent element
+        :arg child_anchor: anchor point on the child element
+        :arg constraint_type: type of constraint
+        :arg value: value of the constraint
         """
 
         if not isinstance(parents, list):
@@ -211,9 +215,9 @@ class PlotDescription:
 
     def _reset_locks(self, state=0):
         """
-        Reset the locks of all PlotElements belonging to this PlotDescription.
+        Reset the locks of all :class:`PlotElements` belonging to this :class:`PlotDescription`.
 
-        :arg state: (default=0) State to reset the locks to
+        :arg state: state to reset the locks to (default ``0``)
         """
 
         for axis in self.axes:
@@ -223,11 +227,12 @@ class PlotDescription:
 
     def apply_constraints(self, iterations=5):
         """
-        Attempt to adjust positions and size of all PlotElements belonging to
-        this PlotDescription to satisfy constraints. Constraints are applied
-        iteratively until the positions and sizes converge.
+        Attempt to adjust positions and size of all :class:`PlotElement`
+        objects belonging to this :class:`PlotDescription` in order to
+        satisfy constraints. Constraints are applied iteratively until
+        positions and sizes converge.
 
-        :arg iterations: (default=5) Number of times to apply constraints
+        :arg iterations: number of times to apply constraints (default ``5``)
         """
 
         if iterations < 1:
@@ -251,9 +256,9 @@ class PlotDescription:
 
     def get_matplotlib_figure(self, **kwargs):
         """
-        Get a matplotlib figure from this PlotDescription.
+        Get a matplotlib figure from this :class:`PlotDescription`.
 
-        :arg kwargs: Additional arguments to pass to matplotlib.pyplot.figure
+        :arg kwargs: additional arguments to pass to matplotlib.pyplot.figure
 
         :returns: matplotlib figure
         """

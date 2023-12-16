@@ -5,4 +5,3 @@ pyplotdesigner
    :maxdepth: 4
 
    pyplotdesigner
-   setup

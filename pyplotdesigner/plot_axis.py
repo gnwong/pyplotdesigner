@@ -24,20 +24,31 @@ from .plot_element import PlotElement
 
 class PlotAxis(PlotElement):
     """
-    Rectangular plot axis with name, location, and dimension. Can
-    be rendered into a matplotlib Axes object.
+    Rectangular plot element subclass of :class:`PlotElement`. Can
+    be rendered into a matplotlib.pyplot.axis object.
+
+    .. attribute:: name
+
+        name of the axis used when generating python code and for internal bookkeeping
+
+    .. attribute:: x0
+
+        left x-coordinate of the axis in figure units
+
+    .. attribute:: y0
+
+        bottom y-coordinate of the axis in figure units
+
+    .. attribute:: width
+
+        width of the axis in figure units
+
+    .. attribute:: height
+
+        height of the axis in figure units
     """
 
     def __init__(self, name, x0, y0, width, height):
-        """
-        Create a new PlotAxis object.
-
-        :arg name: Name of the axis
-        :arg x0: left x-coordinate of the axis location
-        :arg y0: bottom y-coordinate of the axis location
-        :arg width: Width of the axis
-        :arg height: Height of the axis
-        """
 
         super().__init__(name, x0, y0)
 
@@ -51,7 +62,9 @@ class PlotAxis(PlotElement):
     @classmethod
     def load_dictionary(cls, d):
         """
-        Load a PlotAxis from a dictionary.
+        Load a :class:`PlotAxis` from a dictionary.
+
+        :arg d: dictionary representation of a :class:`PlotAxis`
         """
         return cls(d['name'], d['x0'], d['y0'], d['w'], d['h'])
 
@@ -71,7 +84,7 @@ class PlotAxis(PlotElement):
         """
         Reset all locks to a given state.
 
-        :arg state: State to reset locks to
+        :arg state: state to reset locks to
         """
 
         super()._reset_locks(state=state)
