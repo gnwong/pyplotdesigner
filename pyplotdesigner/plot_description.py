@@ -20,6 +20,8 @@ THE SOFTWARE.
 """
 
 import json
+import matplotlib.pyplot as plt
+
 from itertools import count
 
 from .plot_element import PlotElement
@@ -52,6 +54,13 @@ class PlotDescription:
         self.texts = []
         self.constraints = []
 
+        # dummy variables for standardizing constraint solving
+        self.x0 = 0
+        self.y0 = 0
+
+    def __repr__(self):
+        return f"PlotDescription<{self.width}x{self.height}, {len(self.axes)} axes, {len(self.texts)} text elements>"
+        
     @classmethod
     def load(cls, fname):
         """
@@ -151,7 +160,7 @@ class PlotDescription:
 
         self.axes.append(axis)
 
-        return axis.name
+        return axis
     
     def add_text(self, *args, **kwargs):
         """
@@ -211,89 +220,58 @@ class PlotDescription:
                 axis.reset_locks(state=state)
             for text in self.texts:
                 text.reset_locks(state=state)
-      
-
-    ### TODO make the code below prettier
-
-    """
     
-    def _getTargetLocationFromConstraint(self, constraint):
-        tx = None
-        ty = None
-        if 'n' in constraint.ploc:
-            ty = self.h + constraint.value
-        if 's' in constraint.ploc:
-            ty = constraint.value
-        if 'e' in constraint.ploc:
-            tx = self.w + constraint.value
-        if 'w' in constraint.ploc:
-            tx = constraint.value
-        return (tx, ty)
-    
-    def _getTargetDimensionFromConstraint(self, constraint):
-        if 'n' in constraint.ploc or 's' in constraint.ploc:
-            return self.w * constraint.value
-        elif 'w' in constraint.ploc or 'e' in constraint.ploc:
-            return self.h * constraint.value
-        return None
-    
+    def apply_constraints(self, iterations=5):
+        """
+        Attempt to adjust positions and size of all PlotElements belonging to
+        this PlotDescription to satisfy constraints. Constraints are applied
+        iteratively until the positions and sizes converge.
+        
+        :arg iterations: (default=5) Number of times to apply constraints
+        """
 
-    def applyConstraints(self, iterations=5):
-        if iterations < 1: 
+        if iterations < 1:
             return
-        equalizeNetwork = EqualizeNetwork()
-        self.resetLocks()
-        for constraint in self.constraints:
-            if 's' in constraint.ctype:
-                tx, ty = None, None
-                lock = 1
-                if constraint.parent is None:
-                    tx, ty = self._getTargetLocationFromConstraint(constraint)
-                else:
-                    tx, ty = constraint.parent._getTargetLocationFromConstraint(constraint)
-                    lock = 0  ## TODO
-                if 'm' in constraint.ctype:
-                    constraint.child.move(constraint.cloc, tx, ty, lock=lock)
-                elif 'r' in constraint.ctype:
-                    constraint.child.resize(constraint.cloc, tx, ty, lock=lock)
-            elif 'd' in constraint.ctype:
-                tdim = None
-                if constraint.parent is None:
-                    tdim = self._getTargetDimensionFromConstraint(constraint)
-                else:
-                    tdim = constraint.parent._getTargetDimensionFromConstraint(constraint)
-                constraint.child.updateDimension(constraint.cloc, tdim)
-            elif 'e' in constraint.ctype:
-                if constraint.ploc != constraint.cloc:
-                    raise Exception('Equalize constraint must have same ploc/cloc')
-                equalizeNetwork.addConstraint(constraint)
-        for update in equalizeNetwork.getUpdateList():
-            update[0].updateDimension(update[1], update[2])
-        self.applyConstraints(iterations=iterations-1)
+        
+        self._reset_locks()
+        equalize_network = EqualizeNetwork()
 
-    def getFigAxes(self, **kwargs):
-        import matplotlib.pyplot as plt
-        fig = plt.figure(figsize=(self.w, self.h), **kwargs)
-        axes = []
+        # iterate through all constraints adjusting where possible before
+        # applying equalize constraints
+        for constraint in self.constraints:
+
+            to_equalize = constraint.apply(self)
+            if to_equalize is not None:
+                equalize_network.add_constraint(to_equalize)
+                print('TODO got equalize constraint')
+            
+        ## TODO
+        #for update in equalize_network.get_update_list():
+        #    update[0].update_dimension(update[1], update[2])
+        #self.apply_constraints(iterations=iterations-1)
+
+
+    def get_matplotlib_figure(self, **kwargs):
+        """
+        Get a matplotlib figure from this PlotDescription.
+        
+        :arg kwargs: Additional arguments to pass to matplotlib.pyplot.figure
+
+        :returns: matplotlib figure
+        """
+
+        fig = plt.figure(figsize=(self.width, self.height), **kwargs)
+        
         for axis in self.axes:
-            w = axis.w / self.w
-            h = axis.h / self.h
-            x0 = axis.x0 / self.w
-            y0 = axis.y0 / self.h
-            axes.append(fig.add_axes([x0, y0, w, h], label=axis.name))
-        return fig, axes
-    
-    def save_figure(self, fname, **kwargs):
-        import matplotlib.pyplot as plt
-        fig = plt.figure(figsize=(self.w, self.h), **kwargs)
-        for axis in self.axes:
-            w = axis.w / self.w
-            h = axis.h / self.h
-            x0 = axis.x0 / self.w
-            y0 = axis.y0 / self.h
-            ax = fig.add_axes([x0, y0, w, h], label=axis.name)
+            width = axis.width / self.width
+            height = axis.height / self.height
+            x0 = axis.x0 / self.width
+            y0 = axis.y0 / self.height
+            ax = fig.add_axes([x0, y0, width, height], label=axis.name)
             ax.set_xticks([])
             ax.set_yticks([])
-        fig.savefig(fname)
-    """
 
+        ## TODO add text
+
+        return fig
+    

@@ -28,25 +28,25 @@ class PlotAxis(PlotElement):
     be rendered into a matplotlib Axes object.
     """
 
-    def __init__(self, name, x0, y0, w, h):
+    def __init__(self, name, x0, y0, width, height):
         """
         Create a new PlotAxis object.
 
         :arg name: Name of the axis
-        :arg x0: x-coordinate of the axis location
-        :arg y0: y-coordinate of the axis location
-        :arg w: Width of the axis
-        :arg h: Height of the axis
+        :arg x0: left x-coordinate of the axis location
+        :arg y0: bottom y-coordinate of the axis location
+        :arg width: Width of the axis
+        :arg height: Height of the axis
         """
 
         super().__init__(name, x0, y0)
 
-        self.w = w
-        self.h = h
+        self.width = width
+        self.height = height
         self._wl = self._hl = self._xrl = self._yrl = 0
 
     def __repr__(self):
-        return f"PlotAxis<{self.name}, x0={self.x0}, y0={self.y0}, w={self.w}, h={self.h}>"
+        return f"PlotAxis<{self.name}, x0={self.x0}, y0={self.y0}, w={self.width}, h={self.height}>"
         
     @classmethod
     def load_dictionary(cls, d):
@@ -74,85 +74,66 @@ class PlotAxis(PlotElement):
         :arg state: State to reset locks to
         """
         
-        super().reset_locks(state=state)
+        super()._reset_locks(state=state)
 
         self._wl = state
         self._hl = state
         self._xrl = state
         self._yrl = state
 
-    ## TODO clean up
-        
-    """
-
-    def _getTargetLocationFromConstraint(self, constraint):
-        tx = None
-        ty = None
-        if 'n' in constraint.ploc:
-            ty = self.y0 + self.h + constraint.value
-        if 's' in constraint.ploc:
-            ty = self.y0 + constraint.value
-        if 'e' in constraint.ploc:
-            tx = self.x0 + self.w + constraint.value
-        if 'w' in constraint.ploc:
-            tx = self.x0 + constraint.value
-        return (tx, ty)
-
-    def _getTargetDimensionFromConstraint(self, constraint):
-        if 'n' in constraint.ploc or 's' in constraint.ploc:
-            return self.w * constraint.value
-        elif 'w' in constraint.ploc or 'e' in constraint.ploc:
-            return self.h * constraint.value
-        return None
-
-    def move(self, loc, tx, ty, lock=1):
+    def move(self, anchor, tx, ty, lock=1):
+        ## TODO maybe move to PlotElement?
         if tx != None:
-            if 'w' in loc:
+            if 'w' in anchor:
                 self.x0 = tx
                 self._x0l = lock
-            elif 'e' in loc:
-                self.x0 = tx - self.w
+            elif 'e' in anchor:
+                self.x0 = tx - self.width
                 self._xrl = lock
         if ty != None:
-            if 'n' in loc:
-                self.y0 = ty - self.h
+            if 'n' in anchor:
+                self.y0 = ty - self.height
                 self._yrl = lock
-            elif 's' in loc:
+            elif 's' in anchor:
                 self.y0 = ty
                 self._y0l = lock
 
-    def resize(self, loc, tx, ty, lock=1):
+    def resize(self, anchor, tx, ty, lock=1):
+        ## TODO maybe move to PlotElement?
         if tx != None:
-            if 'w' in loc:
-                self.w += self.x0 - tx
+            if 'w' in anchor:
+                self.width += self.x0 - tx
                 self.x0 = tx
                 self._x0l = lock
-            elif 'e' in loc:
-                self.w += tx - self.w - self.x0
-                self.x0 = tx - self.w
+            elif 'e' in anchor:
+                self.width += tx - self.width - self.x0
+                self.x0 = tx - self.width
                 self._xrl = lock
         if ty != None:
-            if 'n' in loc:
-                self.h = ty - self.y0
-                self.y0 = ty - self.h
+            if 'n' in anchor:
+                self.height = ty - self.y0
+                self.y0 = ty - self.height
                 self._yrl = lock
-            elif 's' in loc:
-                self.h = self.y0 - ty + self.h
+            elif 's' in anchor:
+                self.height = self.y0 - ty + self.height
                 self.y0 = ty
                 self._y0l = lock
 
-    def updateDimension(self, loc, tdim):
+    def update_dimension(self, loc, tdim):
+        ## TODO maybe move to PlotElement?
+        ## TODO clean up (loc -> anchor, tdim -> target_dimension)
+
         if 'n' in loc or 's' in loc:
             if self._wl == 1:
                 raise Exception('Cannot set width (locked)')
             self._wl = 2
             if self._xrl == 0:
-                self.w = tdim
+                self.width = tdim
                 if self._x0l == 1:
                     self._xrl = 2
             elif self._x0l == 0:
-                self.x0 -= tdim - self.w
-                self.w = tdim
+                self.x0 -= tdim - self.width
+                self.width = tdim
                 self._x0l = 2
             else:
                 print(" - bad")
@@ -161,13 +142,13 @@ class PlotAxis(PlotElement):
                 raise Exception('Cannot set height (locked)')
             self._hl = 2
             if self._yrl == 0:
-                self.h = tdim
+                self.height = tdim
                 if self._y0l == 1:
                     self._yrl = 2
             elif self._y0l == 0:
-                self.y0 -= tdim - self.h
-                self.h = tdim
+                self.y0 -= tdim - self.height
+                self.height = tdim
                 self._y0l = 2
             else:
                 print(" - bad")
-"""
+
