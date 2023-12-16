@@ -47,7 +47,7 @@ class PlotAxis(PlotElement):
 
     def __repr__(self):
         return f"PlotAxis<{self.name}, x0={self.x0}, y0={self.y0}, w={self.width}, h={self.height}>"
-        
+
     @classmethod
     def load_dictionary(cls, d):
         """
@@ -66,14 +66,14 @@ class PlotAxis(PlotElement):
             'w': self.w,
             'h': self.h
         }
-    
+
     def reset_locks(self, state=0):
         """
         Reset all locks to a given state.
 
         :arg state: State to reset locks to
         """
-        
+
         super()._reset_locks(state=state)
 
         self._wl = state
@@ -82,15 +82,15 @@ class PlotAxis(PlotElement):
         self._yrl = state
 
     def move(self, anchor, tx, ty, lock=1):
-        ## TODO maybe move to PlotElement?
-        if tx != None:
+        # TODO maybe move to PlotElement?
+        if tx is not None:
             if 'w' in anchor:
                 self.x0 = tx
                 self._x0l = lock
             elif 'e' in anchor:
                 self.x0 = tx - self.width
                 self._xrl = lock
-        if ty != None:
+        if ty is not None:
             if 'n' in anchor:
                 self.y0 = ty - self.height
                 self._yrl = lock
@@ -99,8 +99,8 @@ class PlotAxis(PlotElement):
                 self._y0l = lock
 
     def resize(self, anchor, tx, ty, lock=1):
-        ## TODO maybe move to PlotElement?
-        if tx != None:
+        # TODO maybe move to PlotElement?
+        if tx is not None:
             if 'w' in anchor:
                 self.width += self.x0 - tx
                 self.x0 = tx
@@ -109,7 +109,7 @@ class PlotAxis(PlotElement):
                 self.width += tx - self.width - self.x0
                 self.x0 = tx - self.width
                 self._xrl = lock
-        if ty != None:
+        if ty is not None:
             if 'n' in anchor:
                 self.height = ty - self.y0
                 self.y0 = ty - self.height
@@ -120,8 +120,8 @@ class PlotAxis(PlotElement):
                 self._y0l = lock
 
     def update_dimension(self, loc, tdim):
-        ## TODO maybe move to PlotElement?
-        ## TODO clean up (loc -> anchor, tdim -> target_dimension)
+        # TODO maybe move to PlotElement?
+        # TODO clean up (loc -> anchor, tdim -> target_dimension)
 
         if 'n' in loc or 's' in loc:
             if self._wl == 1:
@@ -151,4 +151,3 @@ class PlotAxis(PlotElement):
                 self._y0l = 2
             else:
                 print(" - bad")
-

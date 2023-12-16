@@ -60,12 +60,12 @@ class PlotDescription:
 
     def __repr__(self):
         return f"PlotDescription<{self.width}x{self.height}, {len(self.axes)} axes, {len(self.texts)} text elements>"
-        
+
     @classmethod
     def load(cls, fname):
         """
         Load a PlotDescription from a file.
-        
+
         :arg fname: Name of the file to load from
         """
 
@@ -73,7 +73,7 @@ class PlotDescription:
             dd = json.load(fp)
 
         print(dd)
-        pd = cls(6, 6)  ## TODO support this
+        pd = cls(6, 6)  # TODO support this
 
         version = dd.get('version')
         if not version:
@@ -88,7 +88,7 @@ class PlotDescription:
             print("Texts:", dd['texts'])
 
         return pd
-    
+
     def get_element(self, element, error=True):
         """
         Get a PlotElement by name.
@@ -101,21 +101,21 @@ class PlotDescription:
 
         if element is None:
             return None
-        
+
         if isinstance(element, PlotElement):
             if element in self.axes + self.texts:
                 return element
             elif error:
                 raise Exception(f'Element {element} not found')
-        
+
         name = element
         for element in self.axes + self.texts:
             if element.name == name:
                 return element
-            
+
         if error:
             raise Exception(f'Element {name} not found')
-        
+
         return None
 
     def get_unique_name(self, element):
@@ -161,7 +161,7 @@ class PlotDescription:
         self.axes.append(axis)
 
         return axis
-    
+
     def add_text(self, *args, **kwargs):
         """
         Add text element. Input can be either a PlotText object or a list
@@ -197,10 +197,10 @@ class PlotDescription:
         :arg value: Value of the constraint
         """
 
-        if type(parents) != list:
+        if not isinstance(parents, list):
             parents = [parents]
-        if type(children) != list:
-            children = [children] 
+        if not isinstance(children, list):
+            children = [children]
 
         parents = [self.get_element(parent) for parent in parents]
         children = [self.get_element(child) for child in children]
@@ -210,29 +210,29 @@ class PlotDescription:
                 self.constraints.append(PlotConstraint(parent, child, parent_anchor, child_anchor, constraint_type, value))
 
     def _reset_locks(self, state=0):
-            """
-            Reset the locks of all PlotElements belonging to this PlotDescription.
+        """
+        Reset the locks of all PlotElements belonging to this PlotDescription.
 
-            :arg state: (default=0) State to reset the locks to
-            """
+        :arg state: (default=0) State to reset the locks to
+        """
 
-            for axis in self.axes:
-                axis.reset_locks(state=state)
-            for text in self.texts:
-                text.reset_locks(state=state)
-    
+        for axis in self.axes:
+            axis.reset_locks(state=state)
+        for text in self.texts:
+            text.reset_locks(state=state)
+
     def apply_constraints(self, iterations=5):
         """
         Attempt to adjust positions and size of all PlotElements belonging to
         this PlotDescription to satisfy constraints. Constraints are applied
         iteratively until the positions and sizes converge.
-        
+
         :arg iterations: (default=5) Number of times to apply constraints
         """
 
         if iterations < 1:
             return
-        
+
         self._reset_locks()
         equalize_network = EqualizeNetwork()
 
@@ -243,25 +243,23 @@ class PlotDescription:
             to_equalize = constraint.apply(self)
             if to_equalize is not None:
                 equalize_network.add_constraint(to_equalize)
-                print('TODO got equalize constraint')
-            
-        ## TODO
-        #for update in equalize_network.get_update_list():
-        #    update[0].update_dimension(update[1], update[2])
-        #self.apply_constraints(iterations=iterations-1)
 
+        for update in equalize_network.get_update_list():
+            update[0].update_dimension(update[1], update[2])
+
+        self.apply_constraints(iterations=iterations-1)
 
     def get_matplotlib_figure(self, **kwargs):
         """
         Get a matplotlib figure from this PlotDescription.
-        
+
         :arg kwargs: Additional arguments to pass to matplotlib.pyplot.figure
 
         :returns: matplotlib figure
         """
 
         fig = plt.figure(figsize=(self.width, self.height), **kwargs)
-        
+
         for axis in self.axes:
             width = axis.width / self.width
             height = axis.height / self.height
@@ -271,7 +269,6 @@ class PlotDescription:
             ax.set_xticks([])
             ax.set_yticks([])
 
-        ## TODO add text
+        # TODO add text
 
         return fig
-    

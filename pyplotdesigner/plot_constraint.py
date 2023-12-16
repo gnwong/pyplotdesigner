@@ -22,7 +22,7 @@ THE SOFTWARE.
 
 class PlotConstraint:
     """
-    Relationship between two plot elements. The parent element is used to 
+    Relationship between two plot elements. The parent element is used to
     determine how the child should be modified to satisfy the constraint.
 
     If the parent element is None, the full Plot is used as the parent.
@@ -73,12 +73,12 @@ class PlotConstraint:
         :arg constraint_type: type of constraint (both type and operation)
         :arg value: value to use for constraint
         """
-        
+
         if parent_anchor not in PlotConstraint._valid_anchor_points:
             raise Exception(f'Invalid parent anchor {parent_anchor}')
         if child_anchor not in PlotConstraint._valid_anchor_points:
             raise Exception(f'Invalid child anchor {child_anchor}')
-        
+
         constraint = PlotConstraint._standardize_constraint_type(constraint_type)
 
         remaining_constraint = constraint
@@ -86,7 +86,7 @@ class PlotConstraint:
             remaining_constraint = remaining_constraint.replace(valid_constraint, '')
         if len(remaining_constraint.strip()) > 0:
             raise Exception(f'Invalid constraint type {constraint_type}')
-        
+
         # TODO verify valid parent/child type for ctype
 
         self.parent = parent
@@ -95,19 +95,19 @@ class PlotConstraint:
         self.child_anchor = child_anchor.lower()
         self.value = value
         self.constraint = constraint
-    
+
     def __repr__(self):
         parent = self.parent.name if hasattr(self.parent, 'name') else self.parent
         child = self.child.name if hasattr(self.child, 'name') else self.child
         return f"PlotConstraint<{parent}.{self.parent_anchor} {self.constraint}:{self.value} {child}.{self.child_anchor}>"
-    
+
     @classmethod
     def _standardize_constraint_type(cls, constraint_type):
         constraint_type = constraint_type.lower()
         for key in PlotConstraint._constraint_map:
             constraint_type = constraint_type.replace(key, PlotConstraint._constraint_map[key])
         return constraint_type
-    
+
     def _get_target_location(self, relative_element):
         """
         Get the target location for how to adjust the child element to satisfy this constraint.
@@ -123,19 +123,19 @@ class PlotConstraint:
         if 'n' in self.parent_anchor:
             ty = relative_element.y0 + relative_element.height + self.value
         elif 's' in self.parent_anchor:
-            ty = self.value
-        
+            ty = relative_element.y0 + self.value
+
         if 'e' in self.parent_anchor:
             tx = relative_element.x0 + relative_element.width + self.value
         elif 'w' in self.parent_anchor:
-            tx = self.value
+            tx = relative_element.x0 + self.value
 
         return tx, ty
 
     def _get_target_dimension(self, relative_element):
         """
         Get the target dimension for how to adjust the child element to satisfy this constraint.
-        
+
         :arg relative_element: Element to use as the reference for the target dimension
 
         :returns: target dimension  ## TODO more detail, note None
@@ -145,7 +145,7 @@ class PlotConstraint:
             return relative_element.width * self.value
         elif any(anchor in self.parent_anchor for anchor in ['w', 'e']):
             return relative_element.height * self.value
-        
+
         return None
 
     def apply(self, plot_description):
@@ -176,7 +176,7 @@ class PlotConstraint:
                 self.child.move(self.child_anchor, target_x, target_y, lock=lock)
             elif 'r' in self.constraint:
                 self.child.resize(self.child_anchor, target_x, target_y, lock=lock)
-            
+
         elif 'd' in self.constraint:
 
             target_dimension = None
