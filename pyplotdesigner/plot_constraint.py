@@ -33,6 +33,7 @@ class PlotConstraint:
 
     Valid anchor points are:
 
+        * ``c`` - center
         * ``n`` - north edge
         * ``s`` - south edge
         * ``w`` - west edge
@@ -87,7 +88,7 @@ class PlotConstraint:
         'duplicate': 'd'
     }
 
-    _valid_anchor_points = ['n', 's', 'w', 'e', 'nw', 'ne', 'sw', 'se']
+    _valid_anchor_points = ['c', 'n', 's', 'w', 'e', 'nw', 'ne', 'sw', 'se']
 
     def __init__(self, parent, child, parent_anchor, child_anchor, constraint, value):
 

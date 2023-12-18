@@ -70,14 +70,14 @@ class PlotAxis(PlotElement):
 
     def to_dictionary(self):
         """
-        Get a dictionary representation of this PlotAxis.
+        Get a dictionary representation of this :class:`PlotAxis`.
         """
         return {
             'name': self.name,
             'x0': self.x0,
             'y0': self.y0,
-            'w': self.w,
-            'h': self.h
+            'w': self.width,
+            'h': self.height
         }
 
     def reset_locks(self, state=0):
@@ -136,35 +136,33 @@ class PlotAxis(PlotElement):
         if self.height < 0:
             self.height = 0
 
-    def update_dimension(self, loc, tdim):
+    def update_dimension(self, anchor, target_dimension):
         # TODO maybe move to PlotElement?
-        # TODO clean up (loc -> anchor, tdim -> target_dimension)
-
-        if 'n' in loc or 's' in loc:
+        if 'n' in anchor or 's' in anchor:
             if self._wl == 1:
                 raise Exception('Cannot set width (locked)')
             self._wl = 2
             if self._xrl == 0:
-                self.width = tdim
+                self.width = target_dimension
                 if self._x0l == 1:
                     self._xrl = 2
             elif self._x0l == 0:
-                self.x0 -= tdim - self.width
-                self.width = tdim
+                self.x0 -= target_dimension - self.width
+                self.width = target_dimension
                 self._x0l = 2
             else:
                 print(" - bad")
-        elif 'w' in loc or 'e' in loc:
+        elif 'w' in anchor or 'e' in anchor:
             if self._hl == 1:
                 raise Exception('Cannot set height (locked)')
             self._hl = 2
             if self._yrl == 0:
-                self.height = tdim
+                self.height = target_dimension
                 if self._y0l == 1:
                     self._yrl = 2
             elif self._y0l == 0:
-                self.y0 -= tdim - self.height
-                self.height = tdim
+                self.y0 -= target_dimension - self.height
+                self.height = target_dimension
                 self._y0l = 2
             else:
                 print(" - bad")
