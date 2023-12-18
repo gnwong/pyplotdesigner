@@ -42,9 +42,9 @@ class EqualizeNetwork:
 
         def __init__(self, constraint):
             if constraint.parent_anchor in ['n', 's']:
-                self.orientation = 'width'
+                self.orientation = 'horizontal'
             elif constraint.parent_anchor in ['w', 'e']:
-                self.orientation = 'height'
+                self.orientation = 'vertical'
             else:
                 raise Exception('Equalize constraint must have n,s,w,e parent anchor')
 
@@ -134,11 +134,11 @@ class EqualizeNetwork:
             element_norm = sum([element_scales[key] for key in element_scales])
             element_actual = None
 
-            if network.orientation == 'width':
+            if network.orientation == 'horizontal':
                 element_actual = sum([key.width for key in element_scales])
                 for key in element_scales:
                     updates.append([key, 'n', element_scales[key] / element_norm * element_actual])
-            elif network.orientation == 'height':
+            elif network.orientation == 'vertical':
                 element_actual = sum([key.height for key in element_scales])
                 for key in element_scales:
                     updates.append([key, 'w', element_scales[key] / element_norm * element_actual])

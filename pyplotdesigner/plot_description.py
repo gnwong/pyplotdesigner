@@ -22,6 +22,7 @@ THE SOFTWARE.
 import json
 import matplotlib.pyplot as plt
 
+from matplotlib.lines import Line2D
 from itertools import count
 
 from .plot_element import PlotElement
@@ -40,17 +41,19 @@ class PlotDescription:
     .. attribute:: width
 
         width of the final full plot. if rendering to matplotlib, likely to
-        be interpreted as inches.
+        be interpreted as inches. if ``None``, will be set to exactly cover
+        all added elements. defaults to matplotlib default of ``6.4``.
 
     .. attribute:: height
 
         height of the final full plot. if rendering to matplotlib, likely to
-        be interpreted as inches.
+        be interpreted as inches. if ``None``, will be set to exactly cover
+        all added elements. defaults to matplotlib default of ``4.8``.
     """
 
     _supported_versions = ['1']
 
-    def __init__(self, width, height):
+    def __init__(self, width=6.4, height=4.8):
 
         self.width = width
         self.height = height
@@ -92,6 +95,18 @@ class PlotDescription:
             print("Texts:", dd['texts'])
 
         return pd
+
+    def __getattr__(self, name):
+        """
+        Attempt to get :class:`PlotElement` by name. If not found, fall back
+        on default behavior.
+        """
+
+        prospective = self.get_element(name, error=False)
+        if prospective is not None:
+            return prospective
+
+        return super().__getattribute__(name)
 
     def get_element(self, element, error=True):
         """
@@ -274,6 +289,18 @@ class PlotDescription:
             ax.set_xticks([])
             ax.set_yticks([])
 
-        # TODO add text
+        cursor_length = 0.02
+
+        for text in self.texts:
+            x0 = text.x0 / self.width
+            y0 = text.y0 / self.height
+
+            hline, vline = text.get_cursor(cursor_length)
+            cursor_hline = Line2D(hline[0], hline[1], color='#a00')
+            cursor_vline = Line2D(vline[0], vline[1], color='#a00')
+            fig.add_artist(cursor_hline)
+            fig.add_artist(cursor_vline)
+
+            fig.text(x0, y0, text.text, **text.kwargs)
 
         return fig
