@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pyplot Designer Web</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div id="main-layout">
+    <div id="toolbar">
+        <button onclick="sendAdd('axis')">Add Axis</button>
+        <button onclick="sendAdd('label')">Add Label</button>
+    </div>
+    <div id="canvas-container">
+        <div id="canvas">
+            <canvas id="grid" class="grid-bg"></canvas>
+        </div>
+    </div>
+    <div id="properties">
+        <h3>Selected Item Properties</h3>
+        <div id="props"></div>
+    </div>
+</div>
+<script src="app.js"></script>
+</body>
+</html>
