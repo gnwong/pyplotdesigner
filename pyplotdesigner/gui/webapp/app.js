@@ -1,5 +1,7 @@
 let canvas = document.getElementById('canvas');
 let gridCanvas = document.getElementById('grid');
+let arrowCanvas = document.getElementById('arrows');
+
 let selectedItem = null;
 let scale = 200;
 let borderWidth = 2;
@@ -35,9 +37,61 @@ function drawGrid() {
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.moveTo(0, 1000-scale);
-    ctx.lineTo(w, 1000-scale);
+    ctx.moveTo(0, 1000 - scale);
+    ctx.lineTo(w, 1000 - scale);
     ctx.stroke();
+}
+
+function drawConstraintsArrows(elements, constraints) {
+    const ctx = arrowCanvas.getContext('2d');
+    const w = canvas.clientWidth;
+    const h = canvas.clientHeight;
+    arrowCanvas.width = w;
+    arrowCanvas.height = h;
+    ctx.clearRect(0, 0, w, h);
+    ctx.strokeStyle = 'red';
+    ctx.fillStyle = 'red';
+    ctx.lineWidth = 1;
+
+    function getAttrPos(el, attr) {
+        const { screenX, screenY, screenWidth, screenHeight } = getScreenCoords(el.x, el.y, el.width, el.height);
+        if (attr === 'x') return [screenX, screenY + screenHeight / 2];
+        if (attr === 'y') return [screenX + screenWidth / 2, screenY];
+        if (attr === 'width') return [screenX + screenWidth, screenY + screenHeight / 2];
+        if (attr === 'height') return [screenX + screenWidth / 2, screenY + screenHeight];
+        return [screenX, screenY];
+    }
+
+    for (const c of constraints) {
+        const source = elements.find(e => e.id === c.source_id);
+        const target = elements.find(e => e.id === c.target_id);
+        if (!source || !target) continue;
+        const [x1, y1] = getAttrPos(source, c.source_attr);
+        const [x2, y2] = getAttrPos(target, c.target_attr);
+
+        ctx.beginPath();
+        ctx.moveTo(x1, y1);
+        ctx.lineTo(x2, y2);
+        ctx.stroke();
+
+        // arrow head
+        const angle = Math.atan2(y2 - y1, x2 - x1);
+        ctx.beginPath();
+        ctx.moveTo(x2, y2);
+        ctx.lineTo(x2 - 5 * Math.cos(angle - Math.PI / 6), y2 - 5 * Math.sin(angle - Math.PI / 6));
+        ctx.lineTo(x2 - 5 * Math.cos(angle + Math.PI / 6), y2 - 5 * Math.sin(angle + Math.PI / 6));
+        ctx.lineTo(x2, y2);
+        ctx.fill();
+    }
+}
+
+function renderConstraintList() {
+    const list = document.getElementById('constraint-list');
+    if (!list) return;
+    const constraints = window.constraints || [];
+    list.innerHTML = '<strong>Constraints</strong><ul>' + constraints.map(c =>
+        `<li>${c.target_id}.${c.target_attr} ← (${c.source_id}.${c.source_attr} + ${c.add_before}) × ${c.multiply} + ${c.add_after}</li>`
+    ).join('') + '</ul>';
 }
 
 function getImageCoords(x, y, width, height) {
@@ -70,7 +124,7 @@ function getLayoutPayload() {
             };
         });
 
-    const constraints = [];
+    const constraints = window.constraints || [];
 
     const viewport = {
         width: canvas.clientWidth,
@@ -118,6 +172,7 @@ function renderLayout(elements) {
     const existingGrid = document.getElementById('grid');
     canvas.innerHTML = '';
     canvas.appendChild(existingGrid);
+    canvas.appendChild(arrowCanvas);
     drawGrid();
 
     elements.forEach(el => {
@@ -133,13 +188,13 @@ function renderLayout(elements) {
         div.style.height = screenHeight - 2 * borderWidth + 'px';
         div.style.padding = '0px';
         div.style.borderWidth = borderWidth + 'px';
-        div.style.borderColor = 'black';
-        if (div.dataset.id == selectedItem) {
-            div.style.borderColor = 'red';
-        }
+        div.style.borderColor = (div.dataset.id == selectedItem) ? 'red' : 'black';
         makeDraggable(div);
         canvas.appendChild(div);
     });
+
+    drawConstraintsArrows(elements, window.constraints || []);
+    renderConstraintList();
 }
 
 function makeDraggable(el) {
@@ -181,24 +236,75 @@ canvas.addEventListener('click', (e) => {
     }
 });
 
-function updateProps(el) {
-    // Convert screen coordinates and dimensions to image coordinates
+function addConstraint(targetId, targetAttr) {
+    const allIds = Array.from(document.querySelectorAll('.draggable')).map(el => el.dataset.id);
+    const form = document.getElementById('constraint-form');
+    form.innerHTML = `
+        <hr><p><strong>Add Constraint</strong></p>
+        <label>Source ID:
+            <select id="constraint-source-id">
+                ${allIds.map(id => `<option value="${id}">${id}</option>`).join('')}
+            </select>
+        </label><br>
+        <label>Source Attr:
+            <select id="constraint-source-attr">
+                <option value="x">x</option>
+                <option value="y">y</option>
+                <option value="width">width</option>
+                <option value="height">height</option>
+            </select>
+        </label><br>
+        <label>Multiply: <input type="number" id="constraint-multiply" value="1"></label><br>
+        <label>Add Before: <input type="number" id="constraint-before" value="0"></label><br>
+        <label>Add After: <input type="number" id="constraint-after" value="0"></label><br>
+        <button onclick="confirmConstraint('${targetId}', '${targetAttr}')">Confirm</button>
+    `;
+}
 
+function confirmConstraint(targetId, targetAttr) {
+    const constraint = {
+        target_id: targetId,
+        target_attr: targetAttr,
+        source_id: document.getElementById('constraint-source-id').value,
+        source_attr: document.getElementById('constraint-source-attr').value,
+        multiply: parseFloat(document.getElementById('constraint-multiply').value),
+        add_before: parseFloat(document.getElementById('constraint-before').value),
+        add_after: parseFloat(document.getElementById('constraint-after').value)
+    };
+
+    window.constraints = window.constraints || [];
+    window.constraints.push(constraint);
+    sendLayoutUpdate();
+}
+
+function updateProps(el) {
     const screenX = parseInt(el.style.left, 10);
     const screenY = parseInt(el.style.top, 10);
     const screenWidth = parseInt(el.style.width, 10) + 2 * borderWidth;
     const screenHeight = parseInt(el.style.height, 10) + 2 * borderWidth;
-
     const { imageX, imageY, imageWidth, imageHeight } = getImageCoords(screenX, screenY, screenWidth, screenHeight);
 
     let props = document.getElementById('props');
     props.innerHTML = `
         <p>ID: ${el.dataset.id}</p>
         <p>Type: ${el.dataset.type}</p>
-        <label>X: <input type="number" value="${imageX}" data-prop="x" onchange="updateElementFromProps('${el.dataset.id}');"></label><br>
-        <label>Y: <input type="number" value="${imageY}" data-prop="y" onchange="updateElementFromProps('${el.dataset.id}');"></label><br>
-        <label>Width: <input type="number" value="${imageWidth}" data-prop="width" onchange="updateElementFromProps('${el.dataset.id}');"></label><br>
-        <label>Height: <input type="number" value="${imageHeight}" data-prop="height" onchange="updateElementFromProps('${el.dataset.id}');"></label><br>
+        <label>X: 
+            <input type="number" value="${imageX}" data-prop="x" onchange="updateElementFromProps('${el.dataset.id}');">
+            <button onclick="addConstraint('${el.dataset.id}', 'x')">Add Constraint</button>
+        </label><br>
+        <label>Y: 
+            <input type="number" value="${imageY}" data-prop="y" onchange="updateElementFromProps('${el.dataset.id}');">
+            <button onclick="addConstraint('${el.dataset.id}', 'y')">Add Constraint</button>
+        </label><br>
+        <label>Width: 
+            <input type="number" value="${imageWidth}" data-prop="width" onchange="updateElementFromProps('${el.dataset.id}');">
+            <button onclick="addConstraint('${el.dataset.id}', 'width')">Add Constraint</button>
+        </label><br>
+        <label>Height: 
+            <input type="number" value="${imageHeight}" data-prop="height" onchange="updateElementFromProps('${el.dataset.id}');">
+            <button onclick="addConstraint('${el.dataset.id}', 'height')">Add Constraint</button>
+        </label><br>
+        <div id="constraint-form"></div>
     `;
 }
 

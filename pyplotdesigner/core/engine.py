@@ -64,6 +64,33 @@ class Engine:
         element = Element(id=id, type=element_type, x=0, y=0, width=1, height=1, text=text)
         self.add_element(element)
 
+    def get_element(self, element_id):
+        """
+        Retrieve a layout element by its unique ID.
+
+        :arg element_id: ID of the element to retrieve
+        :return: element object if found or None
+        """
+        for element in self.elements:
+            if element.id == element_id:
+                return element
+        return None
+
+    def get_element_attribute(self, element_id, attr):
+        """
+        Get the value of a specific attribute for an element by its ID.
+
+        :arg element_id: ID of the element to retrieve
+        :arg attr: attribute name (e.g., 'x', 'y', 'width', 'height')
+        :return: reference value of the specified attribute
+        """
+        if element_id is None or attr is None:
+            return None
+        element = self.get_element(element_id)
+        if element is None:
+            raise ValueError(f"Element with ID '{element_id}' not found")
+        return getattr(element, attr)
+
     def get_unique_id(self, prefix="widget-"):
         """
         Generate a unique identifier for a new element based on the current
