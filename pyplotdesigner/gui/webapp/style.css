@@ -9,12 +9,49 @@ body {
     flex-direction: column;
 }
 
+body.dark {
+    background-color: #121212;
+    color: #e0e0e0;
+}
+
+body.dark .toolbar,
+body.dark .left-panel,
+body.dark .right-panel,
+body.dark .status-bar {
+    background-color: #1e1e1e;
+    border-color: #444;
+}
+
+body.dark .center-panel {
+    background-color: #181818;
+}
+
+body.dark input,
+body.dark button {
+    background-color: #333;
+    color: #eee;
+    border: 1px solid #555;
+}
+
+body.dark .resizer {
+    background: #444;
+}
+
+.resizer {
+    width: 5px;
+    background: #ccc;
+    cursor: col-resize;
+    z-index: 10;
+}
+
 .toolbar {
     background: #f5f5f5;
     border-bottom: 1px solid #ccc;
     padding: 0.5em 1em;
     display: flex;
     gap: 10px;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .toolbar button {
@@ -58,6 +95,11 @@ body {
     background-color: white;
 }
 
+#dark-mode-toggle {
+    float: right;
+    margin-left: auto;
+}
+
 canvas.grid-bg, canvas.arrows-bg {
     position: absolute;
     top: 0;
@@ -74,6 +116,7 @@ canvas.grid-bg, canvas.arrows-bg {
     padding: 4px;
     background: #e0e0ff;
     cursor: move;
+    color: #444;
     z-index: 1;
     font-size: 0.9em;
 }

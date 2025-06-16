@@ -11,13 +11,16 @@
   <div class="toolbar">
     <button onclick="sendAdd('axis')">Add Axis</button>
     <button onclick="sendAdd('label')">Add Label</button>
+    <button id="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Dark Mode</button>
   </div>
 
   <div class="main">
-    <div class="left-panel">
+    <div class="left-panel" id="left-panel">
       <h3>Inspector</h3>
       <div id="props" class="props-panel"></div>
     </div>
+
+    <div class="resizer left-resizer" data-resize="left"></div>
 
     <div class="center-panel">
       <div id="canvas">
@@ -26,7 +29,9 @@
       </div>
     </div>
 
-    <div class="right-panel">
+    <div class="resizer right-resizer" data-resize="right"></div>
+
+    <div class="right-panel" id="right-panel">
       <h3>Constraints</h3>
       <div id="constraint-list" class="constraints-panel"></div>
     </div>
