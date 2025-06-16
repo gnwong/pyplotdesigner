@@ -20,7 +20,7 @@ THE SOFTWARE.
 """
 
 
-from .models import Variable
+from .models import Variable, Element
 
 
 class Engine:
@@ -40,7 +40,7 @@ class Engine:
         self.elements = []
         self.constraints = []
 
-    def info(self):
+    def print_info(self):
         """
         Print all registered elements and constraints for debugging or inspection.
         """
@@ -48,6 +48,35 @@ class Engine:
             print(element)
         for constraint in self.constraints:
             print(constraint)
+
+    def add_empty_element(self, element_type="axis", id=None, text=None):
+        """
+        Add a new empty layout element of the specified type with default
+        position and size.
+
+        :arg element_type: type of the element to create (default="axis")
+        :arg id: unique identifier for the element (default=None, auto-generated)
+        """
+        if id is None:
+            id = self.get_unique_id(prefix=f"{element_type}-")
+        if text is None:
+            text = id
+        element = Element(id=id, type=element_type, x=0, y=0, width=1, height=1, text=text)
+        self.add_element(element)
+
+    def get_unique_id(self, prefix="widget-"):
+        """
+        Generate a unique identifier for a new element based on the current
+        number of elements.
+
+        :arg prefix: prefix for the ID (default="widget-")
+        :return: unique ID string
+        """
+        for nid in range(10000):
+            unique_id = f"{prefix}{nid}"
+            if not any(el.id == unique_id for el in self.elements):
+                return unique_id
+        raise RuntimeError("Failed to generate unique ID after 10000 attempts")
 
     def add_element(self, element):
         """

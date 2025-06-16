@@ -1,6 +1,8 @@
 let canvas = document.getElementById('canvas');
 let gridCanvas = document.getElementById('grid');
 let selectedItem = null;
+let scale = 200;
+let borderWidth = 2;
 
 function drawGrid() {
     const ctx = gridCanvas.getContext('2d');
@@ -13,63 +15,103 @@ function drawGrid() {
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.05)';
     ctx.lineWidth = 1;
 
-    for (let x = 0; x < w; x += 100) {
+    for (let x = 0; x < w; x += scale) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x, h);
         ctx.stroke();
     }
-    for (let y = 0; y < h; y += 100) {
+    for (let y = 0; y < h; y += scale) {
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(w, y);
         ctx.stroke();
     }
 
-    // draw main axes
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.beginPath();
-    ctx.moveTo(w / 2, 0);
-    ctx.lineTo(w / 2, h);
+    ctx.moveTo(scale, 0);
+    ctx.lineTo(scale, h);
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.moveTo(0, h / 2);
-    ctx.lineTo(w, h / 2);
+    ctx.moveTo(0, 1000-scale);
+    ctx.lineTo(w, 1000-scale);
     ctx.stroke();
 }
 
+function getImageCoords(x, y, width, height) {
+    const imageX = (x - scale) / scale;
+    const imageY = (canvas.clientHeight - scale - y - height) / scale;
+    const imageWidth = width / scale;
+    const imageHeight = height / scale;
+    return { imageX, imageY, imageWidth, imageHeight };
+}
+
+function getLayoutPayload() {
+    const elements = Array.from(canvas.children)
+        .filter(el => el.classList.contains('draggable'))
+        .map(el => {
+            const screenX = parseInt(el.style.left, 10);
+            const screenY = parseInt(el.style.top, 10);
+            const screenWidth = parseInt(el.style.width, 10) + 2 * borderWidth;
+            const screenHeight = parseInt(el.style.height, 10) + 2 * borderWidth;
+
+            const { imageX, imageY, imageWidth, imageHeight } = getImageCoords(screenX, screenY, screenWidth, screenHeight);
+
+            return {
+                id: el.dataset.id,
+                type: el.dataset.type,
+                x: imageX,
+                y: imageY,
+                width: imageWidth,
+                height: imageHeight,
+                text: el.innerText
+            };
+        });
+
+    const constraints = [];
+
+    const viewport = {
+        width: canvas.clientWidth,
+        height: canvas.clientHeight
+    };
+
+    return { elements, constraints, viewport };
+}
+
 function sendAdd(type) {
+    const payload = getLayoutPayload();
+    payload.action = 'add';
+    payload.new_type = type;
+
     fetch('/api/update_layout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'add', type: type })
+        body: JSON.stringify(payload)
     })
     .then(res => res.json())
     .then(data => renderLayout(data.elements));
 }
 
-async function sendLayoutUpdate() {
-    const layout = Array.from(canvas.children)
-        .filter(el => el.classList.contains('draggable'))
-        .map(el => ({
-            id: el.dataset.id,
-            type: el.dataset.type,
-            x: parseInt(el.style.left, 10),
-            y: parseInt(el.style.top, 10),
-            width: parseInt(el.style.width, 10),
-            height: parseInt(el.style.height, 10),
-            text: el.innerText
-        }));
+function sendLayoutUpdate() {
+    const payload = getLayoutPayload();
 
-    const response = await fetch('/api/update_layout', {
+    fetch('/api/update_layout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ elements: layout })
-    });
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => renderLayout(data.elements));
+}
 
-    const newLayout = await response.json();
-    renderLayout(newLayout.elements);
+function getScreenCoords(x, y, width, height) {
+    const screenX = x * scale + scale;
+    const screenY = canvas.clientHeight - scale - (y + height) * scale;
+    const screenWidth = width * scale;
+    const screenHeight = height * scale;
+    return { screenX, screenY, screenWidth, screenHeight };
 }
 
 function renderLayout(elements) {
@@ -79,15 +121,22 @@ function renderLayout(elements) {
     drawGrid();
 
     elements.forEach(el => {
+        const { screenX, screenY, screenWidth, screenHeight } = getScreenCoords(el.x, el.y, el.width, el.height);
         const div = document.createElement('div');
         div.classList.add('draggable');
         div.dataset.type = el.type;
         div.dataset.id = el.id;
         div.innerText = el.text || el.type;
-        div.style.left = el.x + 'px';
-        div.style.top = el.y + 'px';
-        div.style.width = el.width + 'px';
-        div.style.height = el.height + 'px';
+        div.style.left = screenX + 'px';
+        div.style.top = screenY + 'px';
+        div.style.width = screenWidth - 2 * borderWidth + 'px';
+        div.style.height = screenHeight - 2 * borderWidth + 'px';
+        div.style.padding = '0px';
+        div.style.borderWidth = borderWidth + 'px';
+        div.style.borderColor = 'black';
+        if (div.dataset.id == selectedItem) {
+            div.style.borderColor = 'red';
+        }
         makeDraggable(div);
         canvas.appendChild(div);
     });
@@ -95,8 +144,7 @@ function renderLayout(elements) {
 
 function makeDraggable(el) {
     el.onmousedown = function (e) {
-        selectedItem = el;
-        updateProps(el);
+        setActive(el);
         let offsetX = e.clientX - el.offsetLeft;
         let offsetY = e.clientY - el.offsetTop;
 
@@ -117,23 +165,62 @@ function makeDraggable(el) {
     };
 }
 
+function setActive(el) {
+    const all = document.querySelectorAll('.draggable');
+    all.forEach(div => div.style.borderColor = 'black');
+    el.style.borderColor = 'red';
+    selectedItem = el.dataset.id;
+    updateProps(el);
+}
+
+canvas.addEventListener('click', (e) => {
+    if (e.target === canvas || e.target.id === 'grid') {
+        document.querySelectorAll('.draggable').forEach(div => div.style.borderColor = 'black');
+        selectedItem = null;
+        document.getElementById('props').innerHTML = '';
+    }
+});
+
 function updateProps(el) {
+    // Convert screen coordinates and dimensions to image coordinates
+
+    const screenX = parseInt(el.style.left, 10);
+    const screenY = parseInt(el.style.top, 10);
+    const screenWidth = parseInt(el.style.width, 10) + 2 * borderWidth;
+    const screenHeight = parseInt(el.style.height, 10) + 2 * borderWidth;
+
+    const { imageX, imageY, imageWidth, imageHeight } = getImageCoords(screenX, screenY, screenWidth, screenHeight);
+
     let props = document.getElementById('props');
     props.innerHTML = `
         <p>ID: ${el.dataset.id}</p>
         <p>Type: ${el.dataset.type}</p>
-        <label>X: <input type="number" value="${el.offsetLeft}" onchange="updateStyle('left', this.value)"></label><br>
-        <label>Y: <input type="number" value="${el.offsetTop}" onchange="updateStyle('top', this.value)"></label><br>
-        <label>Width: <input type="number" value="${el.offsetWidth}" onchange="updateStyle('width', this.value)"></label><br>
-        <label>Height: <input type="number" value="${el.offsetHeight}" onchange="updateStyle('height', this.value)"></label>
+        <label>X: <input type="number" value="${imageX}" data-prop="x" onchange="updateElementFromProps('${el.dataset.id}');"></label><br>
+        <label>Y: <input type="number" value="${imageY}" data-prop="y" onchange="updateElementFromProps('${el.dataset.id}');"></label><br>
+        <label>Width: <input type="number" value="${imageWidth}" data-prop="width" onchange="updateElementFromProps('${el.dataset.id}');"></label><br>
+        <label>Height: <input type="number" value="${imageHeight}" data-prop="height" onchange="updateElementFromProps('${el.dataset.id}');"></label><br>
     `;
 }
 
-function updateStyle(prop, value) {
-    if (!selectedItem) return;
-    selectedItem.style[prop] = value + 'px';
-    updateProps(selectedItem);
-    sendLayoutUpdate();
+function updateElementFromProps(id) {
+    const el = document.querySelector(`[data-id="${id}"]`);
+    const props = document.getElementById('props');
+
+    const inputs = props.querySelectorAll('input[data-prop]');
+    const values = {};
+    inputs.forEach(input => {
+        const prop = input.dataset.prop;
+        values[prop] = parseFloat(input.value);
+    });
+
+    const { screenX, screenY, screenWidth, screenHeight } = getScreenCoords(
+        values.x, values.y, values.width, values.height
+    );
+
+    el.style.left = `${screenX}px`;
+    el.style.top = `${screenY}px`;
+    el.style.width = `${screenWidth}px`;
+    el.style.height = `${screenHeight}px`;
 }
 
 window.addEventListener('resize', drawGrid);
