@@ -1,0 +1,100 @@
+__copyright__ = """Copyright (C) 2025 George N. Wong"""
+__license__ = """
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in
+all copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
+THE SOFTWARE.
+"""
+
+
+class Variable:
+    def __init__(self, owner, attr):
+        self.owner = owner
+        self.attr = attr
+
+    def get(self):
+        return getattr(self.owner, self.attr)
+
+    def set(self, value):
+        setattr(self.owner, self.attr, value)
+
+    def __hash__(self):
+        return hash((id(self.owner), self.attr))
+
+    def __eq__(self, other):
+        return isinstance(other, Variable) and \
+            self.owner is other.owner and \
+            self.attr == other.attr
+
+    def __repr__(self):
+        return f"{self.owner.id}.{self.attr}"
+
+
+class Element:
+    def __init__(self, id, x, y, width, height, type, text=""):
+        self.id = id
+        self._x = x
+        self._y = y
+        self._width = width
+        self._height = height
+        self.type = type
+        self.text = text
+
+        # Expose symbolic refs
+        self.x = Variable(self, "_x")
+        self.y = Variable(self, "_y")
+        self.width = Variable(self, "_width")
+        self.height = Variable(self, "_height")
+
+    def __repr__(self):
+        return f"Element(id={self.id}, type={self.type}, x={self._x}, y={self._y}, " \
+            f"width={self._width}, height={self._height}, text='{self.text}')"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "type": self.type,
+            "x": self._x,
+            "y": self._y,
+            "width": self._width,
+            "height": self._height,
+            "text": self.text
+        }
+
+
+class SetValueConstraint:
+    def __init__(self, target, source, multiply=1.0, add_before=0.0, add_after=0.0):
+        self.target = target
+        self.source = source
+        self.multiply = multiply
+        self.add_before = add_before
+        self.add_after = add_after
+
+    def _resolve(self, value_or_var):
+        return value_or_var.get() if hasattr(value_or_var, 'get') else value_or_var
+
+    def apply(self):
+        src = self._resolve(self.source)
+        before = self._resolve(self.add_before)
+        mult = self._resolve(self.multiply)
+        after = self._resolve(self.add_after)
+
+        result = (src + before) * mult + after
+        self.target.set(result)
+
+    def __repr__(self):
+        return f"Constraint({self.target} = ({self.source} + " \
+            f"{self.add_before}) * {self.multiply} + {self.add_after})"
