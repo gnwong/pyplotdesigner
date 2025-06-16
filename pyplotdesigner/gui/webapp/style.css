@@ -1,59 +1,98 @@
-/* webapp/style.css */
-
-body {
+html, body {
     margin: 0;
-    font-family: sans-serif;
+    height: 100%;
+    font-family: system-ui, sans-serif;
 }
 
-#toolbar {
-    background: #f0f0f0;
-    padding: 10px;
+body {
+    display: flex;
+    flex-direction: column;
+}
+
+.toolbar {
+    background: #f5f5f5;
+    border-bottom: 1px solid #ccc;
+    padding: 0.5em 1em;
     display: flex;
     gap: 10px;
 }
 
-#canvas-container {
-    border: 1px solid #ccc;
+.toolbar button {
+    padding: 6px 12px;
+    font-size: 0.9em;
+    cursor: pointer;
+}
+
+.main {
     flex: 1;
-    position: relative;
+    display: flex;
+    overflow: hidden;
+}
+
+.left-panel, .right-panel {
+    width: 220px;
+    background: #f9f9f9;
+    padding: 1em;
+    box-sizing: border-box;
+    border-right: 1px solid #ddd;
+}
+
+.right-panel {
+    border-left: 1px solid #ddd;
+    border-right: none;
+}
+
+.center-panel {
+    flex: 1;
+    background: #f0f4ff;
+    padding: 1em;
+    overflow: auto;
+    box-sizing: border-box;
 }
 
 #canvas {
     width: 100%;
     height: 1000px;
     position: relative;
+    border: 1px solid #ccc;
+    background-color: white;
 }
 
-canvas.grid-bg {
+canvas.grid-bg, canvas.arrows-bg {
     position: absolute;
     top: 0;
     left: 0;
+    width: 100%;
+    height: 100%;
     z-index: 0;
+    pointer-events: none;
 }
 
 .draggable {
     position: absolute;
-    border: 2px solid #000;
+    border: 2px solid #444;
     padding: 4px;
-    cursor: move;
     background: #e0e0ff;
+    cursor: move;
     z-index: 1;
+    font-size: 0.9em;
 }
 
-#properties {
-    background: #fafafa;
-    padding: 10px;
-    height: 400px;
+.props-panel, .constraints-panel {
     overflow-y: auto;
-    border-top: 1px solid #ccc;
-}
-
-#main-layout {
-    display: flex;
-    flex-direction: column;
-    height: 100vh;
+    max-height: calc(100vh - 160px);
 }
 
 input[type='number'] {
     width: 60px;
+    margin: 0 4px;
+}
+
+.status-bar {
+    background: #eee;
+    border-top: 1px solid #ccc;
+    padding: 0.5em 1em;
+    font-size: 0.85em;
+    color: #333;
+    white-space: nowrap;
 }

@@ -1,29 +1,38 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Pyplot Designer Web</title>
-    <link rel="stylesheet" href="style.css">
-    <link rel="icon" href="favicon.ico" type="image/x-icon">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Pyplot Designer Web</title>
+  <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="favicon.ico" type="image/x-icon" />
 </head>
 <body>
-<div id="main-layout">
-    <div id="toolbar">
-        <button onclick="sendAdd('axis')">Add Axis</button>
-        <button onclick="sendAdd('label')">Add Label</button>
+  <div class="toolbar">
+    <button onclick="sendAdd('axis')">Add Axis</button>
+    <button onclick="sendAdd('label')">Add Label</button>
+  </div>
+
+  <div class="main">
+    <div class="left-panel">
+      <h3>Inspector</h3>
+      <div id="props" class="props-panel"></div>
     </div>
-    <div id="canvas-container">
-        <div id="canvas">
-            <canvas id="grid" class="grid-bg"></canvas>
-            <canvas id="arrows" class="arrows-bg"></canvas>
-        </div>
+
+    <div class="center-panel">
+      <div id="canvas">
+        <canvas id="grid" class="grid-bg"></canvas>
+        <canvas id="arrows" class="arrows-bg"></canvas>
+      </div>
     </div>
-    <div id="bottom-panel" style="display: flex;">
-        <div id="props" style="flex: 1;"></div>
-        <div id="constraint-list" style="flex: 1; padding-left: 20px;"></div>
+
+    <div class="right-panel">
+      <h3>Constraints</h3>
+      <div id="constraint-list" class="constraints-panel"></div>
     </div>
-</div>
-<script src="app.js"></script>
+  </div>
+
+  <div class="status-bar">Status: Ready</div>
+  <script src="app.js"></script>
 </body>
 </html>

@@ -27,10 +27,6 @@ async def root():
 
 @app.post("/api/update_layout")
 async def update_layout(request: Request):
-    """
-    Accepts frontend layout and constraint data, solves layout,
-    and returns updated element positions and sizes.
-    """
     data = await request.json()
     return handle_update_layout(data)
 
