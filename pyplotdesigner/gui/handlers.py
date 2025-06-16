@@ -16,7 +16,7 @@ def handle_update_layout(data):
     for constraint in constraints:
         target = engine.get_element_attribute(constraint.get('target_id', None), constraint.get('target_attr', None))
         source = engine.get_element_attribute(constraint.get('source_id', None), constraint.get('source_attr', None))
-        if target is None or source is None:
+        if target is None:
             continue
         engine.add_constraint(SetValueConstraint(
             target,

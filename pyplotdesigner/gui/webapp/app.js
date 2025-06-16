@@ -319,6 +319,46 @@ function confirmConstraint(targetId, targetAttr) {
     sendLayoutUpdate();
 }
 
+function toggleLock(id, attr) {
+    const selector = `[data-id="${id}"] [data-prop="${attr}"]`;
+    const input = document.querySelector(selector) || document.querySelector(`#props input[data-prop="${attr}"]`);
+    if (input && input.type === 'number') {
+        createConstraintForLock(id, attr, parseFloat(input.value));
+    }
+}
+
+function createConstraintForLock(targetId, targetAttr, value) {
+    const constraint = {
+        target_id: targetId,
+        target_attr: targetAttr,
+        source_id: null,
+        source_attr: null,
+        multiply: 1,
+        add_before: value,
+        add_after: 0
+    };
+
+    window.constraints = window.constraints || [];
+    window.constraints.push(constraint);
+    sendLayoutUpdate();
+}
+
+function createPropBlock({ id, label, value, propName, type = "text", locked = false, showLock = true, readonly = false }) {
+    const lockButton = showLock ? `<button onclick="toggleLock('${id}', '${propName}')">${locked ? '🔒' : '🔓'}</button>` : '';
+    const readonlyAttribute = readonly ? 'readonly' : '';
+    return `
+      <div class="prop-block">
+        <div class="prop-header">
+          <label for="${propName}-input">${label}</label>
+        </div>
+        <div class="prop-row">
+          <input id="${propName}-input" type="${type}" value="${value}" data-prop="${propName}" ${readonlyAttribute} onchange="updateElementFromProps('${id}')">
+          ${lockButton}
+        </div>
+      </div>
+    `;
+}
+ 
 function updateProps(el) {
     
     const screenX = parseInt(el.style.left, 10);
@@ -329,27 +369,18 @@ function updateProps(el) {
 
     let props = document.getElementById('props');
     props.innerHTML = `
-        <p>Type: ${el.dataset.type}</p>
-        <label>Name: 
-            <input value="${el.dataset.text}" data-prop="text" onchange="updateElementFromProps('${el.dataset.id}');">
-        </label><br>
-        <label>X: 
-            <input type="number" value="${imageX}" data-prop="x" onchange="updateElementFromProps('${el.dataset.id}');">
-            <button onclick="addConstraint('${el.dataset.id}', 'x')">Add Constraint</button>
-        </label><br>
-        <label>Y: 
-            <input type="number" value="${imageY}" data-prop="y" onchange="updateElementFromProps('${el.dataset.id}');">
-            <button onclick="addConstraint('${el.dataset.id}', 'y')">Add Constraint</button>
-        </label><br>
-        <label>Width: 
-            <input type="number" value="${imageWidth}" data-prop="width" onchange="updateElementFromProps('${el.dataset.id}');">
-            <button onclick="addConstraint('${el.dataset.id}', 'width')">Add Constraint</button>
-        </label><br>
-        <label>Height: 
-            <input type="number" value="${imageHeight}" data-prop="height" onchange="updateElementFromProps('${el.dataset.id}');">
-            <button onclick="addConstraint('${el.dataset.id}', 'height')">Add Constraint</button>
-        </label><br>
-        <div id="constraint-form"></div>
+    <div class="prop-section">
+        <h3><em>Properties</em></h3>
+        ${createPropBlock({ id: el.dataset.id, label: "Type", value: el.dataset.type, propName: "type", showLock: false, readonly: true })}
+        ${createPropBlock({ id: el.dataset.id, label: "Name", value: el.dataset.text, propName: "text" })}
+        ${createPropBlock({ id: el.dataset.id, label: "X", value: imageX, propName: "x", type: "number" })}
+        ${createPropBlock({ id: el.dataset.id, label: "Y", value: imageY, propName: "y", type: "number" })}
+        ${createPropBlock({ id: el.dataset.id, label: "Width", value: imageWidth, propName: "width", type: "number" })}
+        ${createPropBlock({ id: el.dataset.id, label: "Height", value: imageHeight, propName: "height", type: "number" })}
+    </div>
+    <div id="constraint-form" class="prop-section">
+        <h3><em>Constraints</em></h3>
+    </div>
     `;
 }
 

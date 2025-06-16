@@ -92,6 +92,9 @@ class SetValueConstraint:
         mult = self._resolve(self.multiply)
         after = self._resolve(self.add_after)
 
+        if src is None:
+            src = 0.
+
         result = (src + before) * mult + after
         self.target.set(result)
 

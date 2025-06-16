@@ -61,7 +61,9 @@ class Engine:
             id = self.get_unique_id(prefix=f"{element_type}-")
         if text is None:
             text = id
-        element = Element(id=id, type=element_type, x=0, y=0, width=1, height=1, text=text)
+        x = 0.1 * len(self.elements)
+        y = 0.1 * len(self.elements)
+        element = Element(id=id, type=element_type, x=x, y=y, width=1, height=1, text=text)
         self.add_element(element)
 
     def get_element(self, element_id):

@@ -37,6 +37,97 @@ body.dark .resizer {
     background: #444;
 }
 
+.prop-section {
+    font-family: Arial, sans-serif;
+    padding: 15px;
+    background-color: #f9f9f9;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    margin-top: 10px;
+}
+
+.prop-section h3 {
+    font-size: 18px;
+    margin-bottom: 10px;
+    color: #333;
+}
+
+.prop-block {
+    margin-bottom: 15px;
+}
+
+.prop-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 5px;
+}
+
+.prop-header label {
+    font-size: 14px;
+    font-weight: bold;
+    color: #555;
+}
+
+.prop-buttons {
+    display: flex;
+    gap: 5px;
+}
+
+.prop-buttons button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 5px 8px;
+    cursor: pointer;
+    font-size: 12px;
+}
+
+.prop-block input {
+    width: 100%;
+    box-sizing: border-box;
+    padding: 8px;
+    font-size: 14px;
+    border: 1px solid #ccc;
+    border-radius: 4px;
+}
+
+.prop-block input:focus {
+    border-color: #007bff;
+    outline: none;
+    box-shadow: 0 0 5px rgba(0, 123, 255, 0.5);
+}
+
+.prop-buttons button:hover {
+    background-color: #0056b3;
+}
+
+.prop-row {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.prop-row input[type="number"],
+.prop-row input[type="text"] {
+  flex: 1;
+  padding: 4px;
+  font-size: 0.9em;
+}
+
+.prop-row button {
+  padding: 4px 8px;
+  white-space: nowrap;
+}
+
+.props-panel, .constraints-panel {
+    overflow-y: auto;
+    max-height: calc(100vh - 160px);
+    flex-grow: 1;
+}
+  
 .resizer {
     width: 5px;
     background: #ccc;
@@ -99,9 +190,25 @@ body.dark .resizer {
     overflow: hidden;
 }
 
+.left-panel h3 {
+    margin: 0 0 20px 0;
+    font-size: 16px;
+}
+
+.left-panel hr {
+    border: none;
+    border-top: 1px solid #ccc;
+    margin: 10px 0;
+}
+
 .right-panel {
     border-left: 1px solid #ddd;
     border-right: none;
+}
+
+input[readonly] {
+    background-color: #e9ecef;
+    color: #000000;
 }
 
 .center-panel {
@@ -115,7 +222,6 @@ body.dark .resizer {
 .list-panel {
     margin-top: auto;
     padding: 10px;
-    /* background-color: #f9f9f9; */
 }
 
 .list-panel h4 {
@@ -167,17 +273,6 @@ canvas.grid-bg, canvas.arrows-bg {
     color: #444;
     z-index: 1;
     font-size: 0.9em;
-}
-
-.props-panel, .constraints-panel {
-    overflow-y: auto;
-    max-height: calc(100vh - 160px);
-    flex-grow: 1;
-}
-
-input[type='number'] {
-    width: 60px;
-    margin: 0 4px;
 }
 
 .status-bar {
