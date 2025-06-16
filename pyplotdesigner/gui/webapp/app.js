@@ -5,6 +5,8 @@ let arrowCanvas = document.getElementById('arrows');
 let selectedItem = null;
 let scale = 200;
 let borderWidth = 2;
+let offsetX = scale/2;
+let offsetY = scale/2;
 
 function drawGrid() {
     const ctx = gridCanvas.getContext('2d');
@@ -17,13 +19,13 @@ function drawGrid() {
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.05)';
     ctx.lineWidth = 1;
 
-    for (let x = 0; x < w; x += scale) {
+    for (let x = offsetX; x < w; x += scale) {
         ctx.beginPath();
         ctx.moveTo(x, 0);
         ctx.lineTo(x, h);
         ctx.stroke();
     }
-    for (let y = 0; y < h; y += scale) {
+    for (let y = offsetY; y < h; y += scale) {
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(w, y);
@@ -32,13 +34,13 @@ function drawGrid() {
 
     ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
     ctx.beginPath();
-    ctx.moveTo(scale, 0);
-    ctx.lineTo(scale, h);
+    ctx.moveTo(offsetX, 0);
+    ctx.lineTo(offsetX, h);
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.moveTo(0, 1000 - scale);
-    ctx.lineTo(w, 1000 - scale);
+    ctx.moveTo(0, 1000 - offsetY);
+    ctx.lineTo(w, 1000 - offsetY);
     ctx.stroke();
 }
 
@@ -74,7 +76,6 @@ function drawConstraintsArrows(elements, constraints) {
         ctx.lineTo(x2, y2);
         ctx.stroke();
 
-        // arrow head
         const angle = Math.atan2(y2 - y1, x2 - x1);
         ctx.beginPath();
         ctx.moveTo(x2, y2);
@@ -89,14 +90,14 @@ function renderConstraintList() {
     const list = document.getElementById('constraint-list');
     if (!list) return;
     const constraints = window.constraints || [];
-    list.innerHTML = '<strong>Constraints</strong><ul>' + constraints.map(c =>
+    list.innerHTML = '<ul>' + constraints.map(c =>
         `<li>${c.target_id}.${c.target_attr} ← (${c.source_id}.${c.source_attr} + ${c.add_before}) × ${c.multiply} + ${c.add_after}</li>`
     ).join('') + '</ul>';
 }
 
 function getImageCoords(x, y, width, height) {
-    const imageX = (x - scale) / scale;
-    const imageY = (canvas.clientHeight - scale - y - height) / scale;
+    const imageX = (x - offsetX) / scale;
+    const imageY = (canvas.clientHeight - offsetY - y - height) / scale;
     const imageWidth = width / scale;
     const imageHeight = height / scale;
     return { imageX, imageY, imageWidth, imageHeight };
@@ -120,7 +121,7 @@ function getLayoutPayload() {
                 y: imageY,
                 width: imageWidth,
                 height: imageHeight,
-                text: el.innerText
+                text: el.dataset.text
             };
         });
 
@@ -145,7 +146,26 @@ function sendAdd(type) {
         body: JSON.stringify(payload)
     })
     .then(res => res.json())
-    .then(data => renderLayout(data.elements));
+    .then(data => {
+        renderLayout(data.elements);
+        saveState(getLayoutPayload());
+    });    
+}
+
+function shouldAutosave() {
+    return localStorage.getItem('autosave-enabled') === 'true';
+}
+  
+function updateAutosaveButtonUI() {
+    const btn = document.getElementById('autosave-toggle');
+    const enabled = shouldAutosave();
+    btn.textContent = `Autosave: ${enabled ? 'ON' : 'OFF'}`;
+    btn.classList.toggle('active', enabled);
+}
+
+function toggleAutosave() {
+    localStorage.setItem('autosave-enabled', shouldAutosave() ? 'false' : 'true');
+    updateAutosaveButtonUI();
 }
 
 function sendLayoutUpdate() {
@@ -157,12 +177,15 @@ function sendLayoutUpdate() {
         body: JSON.stringify(payload)
     })
     .then(res => res.json())
-    .then(data => renderLayout(data.elements));
+    .then(data => {
+        renderLayout(data.elements);
+        saveState(getLayoutPayload());
+    });
 }
 
 function getScreenCoords(x, y, width, height) {
-    const screenX = x * scale + scale;
-    const screenY = canvas.clientHeight - scale - (y + height) * scale;
+    const screenX = x * scale + offsetX;
+    const screenY = canvas.clientHeight - offsetY - (y + height) * scale;
     const screenWidth = width * scale;
     const screenHeight = height * scale;
     return { screenX, screenY, screenWidth, screenHeight };
@@ -181,6 +204,7 @@ function renderLayout(elements) {
         div.classList.add('draggable');
         div.dataset.type = el.type;
         div.dataset.id = el.id;
+        div.dataset.text = el.text || '';
         div.innerText = el.text || el.type;
         div.style.left = screenX + 'px';
         div.style.top = screenY + 'px';
@@ -195,11 +219,12 @@ function renderLayout(elements) {
 
     drawConstraintsArrows(elements, window.constraints || []);
     renderConstraintList();
+    populatePlotElementsList(elements);
 }
 
 function makeDraggable(el) {
     el.onmousedown = function (e) {
-        setActive(el);
+        setActiveFromElement(el);
         let offsetX = e.clientX - el.offsetLeft;
         let offsetY = e.clientY - el.offsetTop;
 
@@ -220,7 +245,24 @@ function makeDraggable(el) {
     };
 }
 
-function setActive(el) {
+function resetLayout() {
+    localStorage.removeItem('pyplotdesigner-state');
+    location.reload();
+  }
+
+function saveState(payload) {
+    if (localStorage.getItem('autosave-enabled') === 'true') {
+        localStorage.setItem('pyplotdesigner-state', JSON.stringify(payload));
+    }
+  }
+
+function setActiveFromId(elementId) {
+    const el = document.querySelector(`[data-id="${elementId}"]`);
+    if (el) {
+        setActiveFromElement(el);
+    }
+}
+function setActiveFromElement(el) {
     const all = document.querySelectorAll('.draggable');
     all.forEach(div => div.style.borderColor = 'black');
     el.style.borderColor = 'red';
@@ -278,6 +320,7 @@ function confirmConstraint(targetId, targetAttr) {
 }
 
 function updateProps(el) {
+    
     const screenX = parseInt(el.style.left, 10);
     const screenY = parseInt(el.style.top, 10);
     const screenWidth = parseInt(el.style.width, 10) + 2 * borderWidth;
@@ -286,8 +329,10 @@ function updateProps(el) {
 
     let props = document.getElementById('props');
     props.innerHTML = `
-        <p>ID: ${el.dataset.id}</p>
         <p>Type: ${el.dataset.type}</p>
+        <label>Name: 
+            <input value="${el.dataset.text}" data-prop="text" onchange="updateElementFromProps('${el.dataset.id}');">
+        </label><br>
         <label>X: 
             <input type="number" value="${imageX}" data-prop="x" onchange="updateElementFromProps('${el.dataset.id}');">
             <button onclick="addConstraint('${el.dataset.id}', 'x')">Add Constraint</button>
@@ -316,7 +361,8 @@ function updateElementFromProps(id) {
     const values = {};
     inputs.forEach(input => {
         const prop = input.dataset.prop;
-        values[prop] = parseFloat(input.value);
+        const parsedValue = parseFloat(input.value);
+        values[prop] = isNaN(parsedValue) ? input.value : parsedValue;
     });
 
     const { screenX, screenY, screenWidth, screenHeight } = getScreenCoords(
@@ -325,8 +371,12 @@ function updateElementFromProps(id) {
 
     el.style.left = `${screenX}px`;
     el.style.top = `${screenY}px`;
-    el.style.width = `${screenWidth}px`;
-    el.style.height = `${screenHeight}px`;
+    el.style.width = `${screenWidth - 2 * borderWidth}px`;
+    el.style.height = `${screenHeight - 2 * borderWidth}px`;
+
+    el.dataset.text = values.text || el.dataset.text;
+
+    sendLayoutUpdate();
 }
 
 function toggleDarkMode() {
@@ -360,6 +410,42 @@ function setupResizablePanels() {
     });
 }
 
+function highlightSelectedItem(selectedItem) {
+    const listItems = document.querySelectorAll('.list-item');
+    listItems.forEach(item => {
+        item.style.backgroundColor = '';
+    });
+    selectedItem.style.backgroundColor = '#d0d0d0';
+}
+
+function populatePlotElementsList(elements) {
+    const listContainer = document.getElementById('elements-list');
+    if (!listContainer) return;
+
+    listContainer.innerHTML = '';
+
+    elements.forEach(el => {
+        const listItem = document.createElement('li');
+        listItem.textContent = `${el.text || 'Unnamed Element'}`;
+        listItem.classList.add('list-item');
+
+        listItem.addEventListener('mouseenter', () => {
+            listItem.style.backgroundColor = '#aaaaaa';
+        });
+
+        listItem.addEventListener('mouseleave', () => {
+            listItem.style.backgroundColor = '';
+        });
+
+        listItem.addEventListener('click', () => {
+            setActiveFromId(el.id);
+            highlightSelectedItem(listItem);
+        });
+
+        listContainer.appendChild(listItem);
+    });
+}
+
 function restorePanelSizes() {
     ['left-panel', 'right-panel'].forEach(id => {
         const savedWidth = localStorage.getItem(id + '-width');
@@ -381,5 +467,19 @@ window.addEventListener('DOMContentLoaded', () => {
 
     if (localStorage.getItem('darkMode') === 'on') {
         document.body.classList.add('dark');
+    }
+
+    if (shouldAutosave()) {
+        document.getElementById('autosave-toggle').checked = true;
+    }
+    updateAutosaveButtonUI();
+
+    const saved = localStorage.getItem('pyplotdesigner-state');
+    if (saved) {
+        const parsed = JSON.parse(saved);
+        window.constraints = parsed.constraints || [];
+        renderLayout(parsed.elements || []);
+    } else {
+        sendLayoutUpdate();
     }
 });

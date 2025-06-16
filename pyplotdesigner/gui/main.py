@@ -32,7 +32,11 @@ async def update_layout(request: Request):
 
 
 def main():
-    uvicorn.run("pyplotdesigner.gui.main:app", host="127.0.0.1", port=8080, reload=True)
+    uvicorn.run("pyplotdesigner.gui.main:app",
+                host="127.0.0.1",
+                port=8080,
+                reload=True,
+                log_level="warning")
 
 
 if __name__ == "__main__":
