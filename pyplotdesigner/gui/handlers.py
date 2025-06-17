@@ -5,6 +5,8 @@ from pyplotdesigner.core.models import Element, SetValueConstraint
 
 def handle_update_layout(data, verbose=False):
 
+    # TODO: disallow constraints with the same target
+
     def _get_attribute_or_value(val, default):
         """
         Helper function to get the value of an attribute or return the value itself.

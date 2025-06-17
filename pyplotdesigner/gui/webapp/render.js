@@ -3,7 +3,6 @@ import { drawGrid, getImageCoords, getScreenCoords } from './canvas.js';
 import { getConstraintDescription } from './constraints.js';
 import { sendLayoutUpdate, sendDelete, deleteConstant, deleteConstraint, updateConstant } from './api.js';
 
-
 export function updateConstantFromProps(id) {
     const inputs = props.querySelectorAll('input[data-prop]');
     const values = {};
@@ -23,8 +22,8 @@ function renderConstantDetail(constant) {
     <div class="prop-section">
         <h3><em>Properties</em></h3>
         ${createPropBlock({ id: constant.id, label: "Type", value: 'constant', propName: "type", showLock: false, readonly: true })}
-        ${createPropBlock({ id: constant.id, label: "Name", value: constant.id, propName: "id", updateFn: "updateConstantFromProps" })}
-        ${createPropBlock({ id: constant.id, label: "value", value: constant.value, propName: "value", type: "number", updateFn: "updateConstantFromProps" })}
+        ${createPropBlock({ id: constant.id, label: "Name", value: constant.id, propName: "id", showLock: false, updateFn: "updateConstantFromProps" })}
+        ${createPropBlock({ id: constant.id, label: "value", value: constant.value, propName: "value", showLock: false, type: "number", updateFn: "updateConstantFromProps" })}
     </div>
     <div id="constraint-form" class="prop-section">
         <h3><em>Constraints</em></h3>
@@ -140,7 +139,7 @@ function updateProps(el) {
     <div class="prop-section">
         <h3><em>Properties</em></h3>
         ${createPropBlock({ id: el.dataset.id, label: "Type", value: el.dataset.type, propName: "type", showLock: false, readonly: true })}
-        ${createPropBlock({ id: el.dataset.id, label: "Name", value: el.dataset.text, propName: "text" })}
+        ${createPropBlock({ id: el.dataset.id, label: "Name", value: el.dataset.text, propName: "text", showLock: false })}
         ${createPropBlock({ id: el.dataset.id, label: "X", value: imageX, propName: "x", type: "number" })}
         ${createPropBlock({ id: el.dataset.id, label: "Y", value: imageY, propName: "y", type: "number" })}
         ${createPropBlock({ id: el.dataset.id, label: "Width", value: imageWidth, propName: "width", type: "number" })}
@@ -150,6 +149,8 @@ function updateProps(el) {
         <h3><em>Constraints</em></h3>
     </div>
     `;
+
+    renderElementConstraintsSection(el);
 }
 
 export function updateElementFromProps(id) {
@@ -225,6 +226,81 @@ function populatePlotElementsList(elements) {
 
         listContainer.appendChild(listItem);
     });
+}
+
+function createConstraintPropBlock(id, label, propName) {
+    const constraint = (window.constraints || []).find(c =>
+        c.target?.id === id && c.target?.attr === propName
+    );
+
+    const block = document.createElement('div');
+    block.className = 'prop-block';
+
+    const header = document.createElement('div');
+    header.className = 'prop-header';
+    header.innerHTML = `<label for="${propName}-input">${label}</label>`;
+    block.appendChild(header);
+
+    const row = document.createElement('div');
+    row.className = 'prop-row';
+    const list = document.createElement('div');
+    list.className = 'list-container';
+
+    // add constraint info if it exists
+    if (constraint) {
+        const constraintItem = document.createElement('div');
+        constraintItem.className = 'list-item';
+
+        const span = document.createElement('span');
+        span.textContent = getConstraintDescription(constraint);
+
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.className = 'delete-button';
+        deleteButton.onclick = () => {
+            deleteConstraint(constraint);
+            sendLayoutUpdate();
+        };
+
+        constraintItem.appendChild(span);
+        constraintItem.appendChild(deleteButton);
+        list.appendChild(constraintItem);
+    } else {
+        const constraintItem = document.createElement('div');
+        constraintItem.className = 'list-item';
+
+        const span = document.createElement('span');
+        span.textContent = '(none)';
+
+        const addButton = document.createElement('button');
+        addButton.textContent = 'Add Constraint';
+        addButton.className = 'add-constraint-button';
+        addButton.onclick = () => addConstraint(id, propName);
+        
+        constraintItem.appendChild(span);
+        constraintItem.appendChild(addButton);
+        list.appendChild(constraintItem);
+    }
+
+    row.appendChild(list);
+    block.appendChild(row);
+    return block;
+}
+
+function renderElementConstraintsSection(el) {
+
+    const container = document.getElementById('constraint-form');
+    if (!container) return;
+    
+    container.innerHTML = '';
+    const heading = document.createElement('h3');
+    heading.innerHTML = '<em>Constraints</em>';
+    container.appendChild(heading);
+    
+    container.appendChild(createConstraintPropBlock(el.dataset.id, 'X', 'x'));
+    container.appendChild(createConstraintPropBlock(el.dataset.id, 'Y', 'y'));
+    container.appendChild(createConstraintPropBlock(el.dataset.id, 'Width', 'width'));
+    container.appendChild(createConstraintPropBlock(el.dataset.id, 'Height', 'height'));
 }
 
 function makeDraggable(el) {
