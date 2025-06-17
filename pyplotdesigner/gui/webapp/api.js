@@ -48,6 +48,29 @@ export function deleteConstraint(constraint) {
     renderConstraintsList(window.constraints);
 }
 
+export function updateConstant(id, constant) {
+    const payload = getLayoutPayload();
+    payload.action = 'update_constant';
+    payload.id = id;
+    payload.constant = constant;
+
+    window.constants = window.constants.filter(c => c.id !== id);
+    window.constants.push({
+        id: constant.id,
+        value: constant.value
+    });
+
+    fetch('/api/update_layout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+        processReceivedPayload(data);
+    });    
+}
+
 export function sendAdd(type) {
     const payload = getLayoutPayload();
     payload.action = 'add';
@@ -101,6 +124,7 @@ export function sendLayoutUpdate() {
 }
 
 function processReceivedPayload(data) {
+    console.log('getting new constants', data.constants);
     window.constraints = data.constraints || [];
     window.constants = data.constants || [];
     renderLayout(data.elements);

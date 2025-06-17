@@ -12,7 +12,8 @@
     <button id="add-axis-btn" onclick="sendAdd('axis')">Add Axis</button>
     <button id="add-label-btn" onclick="sendAdd('label')">Add Label</button>
     <button id="add-variable-btn" onclick="sendAdd('constant')">Add Constant</button>
-    <button id="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Dark Mode</button>
+    <div id="dark-mode-toggle"></div>
+    <!-- <button id="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Dark Mode</button> -->
     <button onclick="resetLayout()">Reset</button>
     <button id="autosave-toggle" onclick="toggleAutosave()" class="toggle-button">Autosave: OFF</button>
   </div>
@@ -41,6 +42,7 @@
     <div class="right-panel" id="right-panel">
       <h2>Constraints</h2>
       <div id="constraints-list" class="list-container"></div>
+      <br><br>
       <h2>Constants</h2>
       <div id="constants-list" class="list-container"></div>
     </div>

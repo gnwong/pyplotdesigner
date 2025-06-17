@@ -63,6 +63,35 @@ class Engine:
         constant.value = value
         self.constants.append(constant)
 
+    def update_constant(self, id, constant):
+        """
+        Safely update constant value identified by its current (-> previous) id.
+
+        :arg id: unique identifier of the constant to update
+        :arg constant: new Constant object with updated value
+        """
+        if id is None or constant is None:
+            return
+        new_id = constant.get('id', None)
+        new_value = constant.get('value', None)
+        if new_id is None or new_value is None:
+            return
+
+        existing_constant = next((c for c in self.constants if c.id == id), None)
+        if existing_constant is None:
+            return
+
+        # check if the new constant id already exists
+        if any(c.id == new_id for c in self.constants if c.id != id):
+            print(f"Constant with id '{new_id}' already exists, cannot update.")
+            return
+
+        # update the existing constant
+        existing_constant.id = new_id
+        existing_constant.value = new_value
+
+        # TODO, check all constraints for references to this constant and update appropriately
+
     def add_empty_element(self, element_type="axis", id=None, text=None):
         """
         Add a new empty layout element of the specified type with default

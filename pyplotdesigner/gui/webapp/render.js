@@ -1,7 +1,36 @@
 import { canvas, arrowCanvas, borderWidth, setSelectedItem, getSelectedItem } from './shared.js';
 import { drawGrid, getImageCoords, getScreenCoords } from './canvas.js';
 import { getConstraintDescription } from './constraints.js';
-import { sendLayoutUpdate, sendDelete, deleteConstant, deleteConstraint } from './api.js';
+import { sendLayoutUpdate, sendDelete, deleteConstant, deleteConstraint, updateConstant } from './api.js';
+
+
+export function updateConstantFromProps(id) {
+    const inputs = props.querySelectorAll('input[data-prop]');
+    const values = {};
+    inputs.forEach(input => {
+        const prop = input.dataset.prop;
+        const parsedValue = parseFloat(input.value);
+        values[prop] = isNaN(parsedValue) ? input.value : parsedValue;
+    });
+    updateConstant(id, values);
+    sendLayoutUpdate();
+    renderConstantDetail(values);
+}
+
+function renderConstantDetail(constant) {
+    let props = document.getElementById('props');
+    props.innerHTML = `
+    <div class="prop-section">
+        <h3><em>Properties</em></h3>
+        ${createPropBlock({ id: constant.id, label: "Type", value: 'constant', propName: "type", showLock: false, readonly: true })}
+        ${createPropBlock({ id: constant.id, label: "Name", value: constant.id, propName: "id", updateFn: "updateConstantFromProps" })}
+        ${createPropBlock({ id: constant.id, label: "value", value: constant.value, propName: "value", type: "number", updateFn: "updateConstantFromProps" })}
+    </div>
+    <div id="constraint-form" class="prop-section">
+        <h3><em>Constraints</em></h3>
+    </div>
+    `;
+}
 
 export function renderConstantsList(constants) {
     const constantsContainer = document.getElementById('constants-list');
@@ -18,6 +47,10 @@ export function renderConstantsList(constants) {
         deleteButton.className = 'delete-button';
         deleteButton.onclick = () => deleteConstant(constant);
         constantItem.appendChild(deleteButton);
+        constantItem.addEventListener('click', () => {
+            setActiveFromElement(null);
+            renderConstantDetail(constant);
+        });        
         constantsContainer.appendChild(constantItem);
     });
 }
@@ -68,15 +101,17 @@ export function renderLayout(elements) {
     });
 
     // rerender constraints and lists/properties
+    renderConstantsList(window.constants || []);
     drawConstraintsArrows(elements, window.constraints || []);
     renderConstraintsList(window.constraints || []);
-    renderConstantsList(window.constants || []);
     populatePlotElementsList(elements);
     setActiveFromId(getSelectedItem());
 }
 
-function createPropBlock({ id, label, value, propName, type = "text", locked = false, showLock = true, readonly = false }) {
-    const lockButton = showLock ? `<button onclick="toggleLock('${id}', '${propName}')">${locked ? '🔒' : '🔓'}</button>` : '';
+function createPropBlock({id, label, value, propName, type = "text", locked = false, showLock = true, readonly = false, updateFn = "updateElementFromProps"}) {
+    const lockButton = showLock
+        ? `<button onclick="toggleLock('${id}', '${propName}')">${locked ? '🔒' : '🔓'}</button>`
+        : '';
     const readonlyAttribute = readonly ? 'readonly' : '';
     return `
       <div class="prop-block">
@@ -84,7 +119,8 @@ function createPropBlock({ id, label, value, propName, type = "text", locked = f
           <label for="${propName}-input">${label}</label>
         </div>
         <div class="prop-row">
-          <input id="${propName}-input" type="${type}" value="${value}" data-prop="${propName}" ${readonlyAttribute} onchange="updateElementFromProps('${id}')">
+          <input id="${propName}-input" type="${type}" value="${value}" data-prop="${propName}" ${readonlyAttribute}
+                 onchange="${updateFn}('${id}')">
           ${lockButton}
         </div>
       </div>
@@ -152,9 +188,13 @@ function setActiveFromId(elementId) {
 function setActiveFromElement(el) {
     const all = document.querySelectorAll('.draggable');
     all.forEach(div => div.style.borderColor = 'black');
-    el.style.borderColor = 'red';
-    setSelectedItem(el.dataset.id);
-    updateProps(el);
+    if (el === null) {
+        setSelectedItem(null);
+    } else {
+        el.style.borderColor = 'red';
+        setSelectedItem(el.dataset.id);
+        updateProps(el);
+    }
 }
 
 function populatePlotElementsList(elements) {

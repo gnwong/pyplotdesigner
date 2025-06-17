@@ -1,6 +1,6 @@
 from fastapi.responses import JSONResponse
 from pyplotdesigner.core.engine import Engine
-from pyplotdesigner.core.models import Element, SetValueConstraint, Constant
+from pyplotdesigner.core.models import Element, SetValueConstraint
 
 
 def handle_update_layout(data, verbose=False):
@@ -76,6 +76,10 @@ def handle_update_layout(data, verbose=False):
     elif action == "delete":
         element_id = data.get("element_id", None)
         engine.remove_element_by_id(element_id)
+    elif action == "update_constant":
+        constant_id = data.get("id", None)
+        constant_data = data.get("constant", None)
+        engine.update_constant(constant_id, constant_data)
     elif action is not None:
         print('action not recognized:', action)
         for key in data:

@@ -210,6 +210,10 @@ body.dark .resizer {
     border-right: none;
 }
 
+.right-panel h2 {
+    margin-top: 0px;
+}
+
 input[readonly] {
     background-color: #e9ecef;
     color: #000000;
@@ -276,6 +280,10 @@ canvas.grid-bg, canvas.arrows-bg {
     color: #444;
     z-index: 1;
     font-size: 0.9em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    display: flex;
 }
 
 .status-bar {

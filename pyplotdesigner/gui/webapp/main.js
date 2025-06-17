@@ -2,7 +2,7 @@ import { canvas, setSelectedItem } from './shared.js';
 import { restorePanelSizes, toggleDarkMode, setupResizablePanels } from './ui.js';
 import { drawGrid } from './canvas.js';
 import { sendAdd, sendLayoutUpdate } from './api.js'
-import { renderLayout, updateElementFromProps } from './render.js'
+import { renderLayout, updateElementFromProps, updateConstantFromProps } from './render.js'
 
 function shouldAutosave() {
     return localStorage.getItem('autosave-enabled') === 'true';
@@ -103,6 +103,7 @@ window.toggleAutosave = toggleAutosave;
 // expose functions for modifying layout and constraints
 window.toggleLock = toggleLock;
 window.updateElementFromProps = updateElementFromProps;
+window.updateConstantFromProps = updateConstantFromProps;
 
 // attach event listeners
 window.addEventListener('resize', drawGrid);

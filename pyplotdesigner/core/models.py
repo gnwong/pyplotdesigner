@@ -56,7 +56,7 @@ class Constant:
             "id": self.id,
             "value": self.value
         }
-    
+
 
 class Element:
     def __init__(self, id, x, y, width, height, type, text=""):
