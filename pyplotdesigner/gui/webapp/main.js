@@ -1,48 +1,9 @@
-let canvas = document.getElementById('canvas');
-let gridCanvas = document.getElementById('grid');
-let arrowCanvas = document.getElementById('arrows');
+import { canvas, arrowCanvas, scale, borderWidth, offsetX, offsetY } from './shared.js';
+import { restorePanelSizes, toggleDarkMode, setupResizablePanels } from './ui.js';
+import { drawGrid, getImageCoords, getScreenCoords } from './canvas.js';
+import { getConstraintDescription, constraintsEqual } from './constraints.js';
 
 let selectedItem = null;
-let scale = 200;
-let borderWidth = 2;
-let offsetX = scale/2;
-let offsetY = scale/2;
-
-function drawGrid() {
-    const ctx = gridCanvas.getContext('2d');
-    const w = canvas.clientWidth;
-    const h = canvas.clientHeight;
-    gridCanvas.width = w;
-    gridCanvas.height = h;
-
-    ctx.clearRect(0, 0, w, h);
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.05)';
-    ctx.lineWidth = 1;
-
-    for (let x = offsetX; x < w; x += scale) {
-        ctx.beginPath();
-        ctx.moveTo(x, 0);
-        ctx.lineTo(x, h);
-        ctx.stroke();
-    }
-    for (let y = offsetY; y < h; y += scale) {
-        ctx.beginPath();
-        ctx.moveTo(0, y);
-        ctx.lineTo(w, y);
-        ctx.stroke();
-    }
-
-    ctx.strokeStyle = 'rgba(0, 0, 0, 0.3)';
-    ctx.beginPath();
-    ctx.moveTo(offsetX, 0);
-    ctx.lineTo(offsetX, h);
-    ctx.stroke();
-
-    ctx.beginPath();
-    ctx.moveTo(0, 1000 - offsetY);
-    ctx.lineTo(w, 1000 - offsetY);
-    ctx.stroke();
-}
 
 function drawConstraintsArrows(elements, constraints) {
     const ctx = arrowCanvas.getContext('2d');
@@ -57,20 +18,16 @@ function drawConstraintsArrows(elements, constraints) {
 
     function getAttrPos(el, attr) {
         const { screenX, screenY, screenWidth, screenHeight } = getScreenCoords(el.x, el.y, el.width, el.height);
-        if (attr === 'x') return [screenX, screenY + screenHeight / 2];
-        if (attr === 'y') return [screenX + screenWidth / 2, screenY];
-        if (attr === 'width') return [screenX + screenWidth, screenY + screenHeight / 2];
-        if (attr === 'height') return [screenX + screenWidth / 2, screenY + screenHeight];
-        return [screenX, screenY];
+        switch (attr) {
+            case 'x': return [screenX, screenY + screenHeight / 2];
+            case 'y': return [screenX + screenWidth / 2, screenY];
+            case 'width': return [screenX + screenWidth, screenY + screenHeight / 2];
+            case 'height': return [screenX + screenWidth / 2, screenY + screenHeight];
+            default: return [screenX, screenY];
+        }
     }
 
-    for (const c of constraints) {
-        const source = elements.find(e => e.id === c.source_id);
-        const target = elements.find(e => e.id === c.target_id);
-        if (!source || !target) continue;
-        const [x1, y1] = getAttrPos(source, c.source_attr);
-        const [x2, y2] = getAttrPos(target, c.target_attr);
-
+    function drawArrow(x1, y1, x2, y2) {
         ctx.beginPath();
         ctx.moveTo(x1, y1);
         ctx.lineTo(x2, y2);
@@ -81,26 +38,50 @@ function drawConstraintsArrows(elements, constraints) {
         ctx.moveTo(x2, y2);
         ctx.lineTo(x2 - 5 * Math.cos(angle - Math.PI / 6), y2 - 5 * Math.sin(angle - Math.PI / 6));
         ctx.lineTo(x2 - 5 * Math.cos(angle + Math.PI / 6), y2 - 5 * Math.sin(angle + Math.PI / 6));
-        ctx.lineTo(x2, y2);
+        ctx.closePath();
         ctx.fill();
+    }
+
+    for (const c of constraints) {
+        const target = elements.find(e => e.id === c.target?.id);
+        if (!target || !c.target.attr) continue;
+        const [x2, y2] = getAttrPos(target, c.target.attr);
+
+        const sources = [c.source, c.multiply, c.add_before, c.add_after];
+        for (const ref of sources) {
+            if (ref?.id) {
+                const source = elements.find(e => e.id === ref.id);
+                if (!source || !ref.attr) continue;
+                const [x1, y1] = getAttrPos(source, ref.attr);
+                drawArrow(x1, y1, x2, y2);
+            }
+        }
     }
 }
 
-function renderConstraintList() {
-    const list = document.getElementById('constraint-list');
-    if (!list) return;
-    const constraints = window.constraints || [];
-    list.innerHTML = '<ul>' + constraints.map(c =>
-        `<li>${c.target_id}.${c.target_attr} ← (${c.source_id}.${c.source_attr} + ${c.add_before}) × ${c.multiply} + ${c.add_after}</li>`
-    ).join('') + '</ul>';
+function deleteConstraint(constraint) {
+    window.constraints = window.constraints.filter(c => !constraintsEqual(c, constraint));
+    sendLayoutUpdate();
+    renderConstraintsList(window.constraints);
 }
 
-function getImageCoords(x, y, width, height) {
-    const imageX = (x - offsetX) / scale;
-    const imageY = (canvas.clientHeight - offsetY - y - height) / scale;
-    const imageWidth = width / scale;
-    const imageHeight = height / scale;
-    return { imageX, imageY, imageWidth, imageHeight };
+function renderConstraintsList(constraints) {
+    const constraintsContainer = document.getElementById('constraints-list');
+    constraintsContainer.innerHTML = '';
+
+    constraints.forEach(constraint => {
+        const constraintItem = document.createElement('div');
+        constraintItem.className = 'list-item';
+        constraintItem.innerHTML = `
+            <span>${getConstraintDescription(constraint)}</span>
+        `;
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.className = 'delete-button';
+        deleteButton.onclick = () => deleteConstraint(constraint);
+        constraintItem.appendChild(deleteButton);
+        constraintsContainer.appendChild(constraintItem);
+    });
 }
 
 function getLayoutPayload() {
@@ -179,16 +160,9 @@ function sendLayoutUpdate() {
     .then(res => res.json())
     .then(data => {
         renderLayout(data.elements);
+        constraints = data.constraints || [];
         saveState(getLayoutPayload());
     });
-}
-
-function getScreenCoords(x, y, width, height) {
-    const screenX = x * scale + offsetX;
-    const screenY = canvas.clientHeight - offsetY - (y + height) * scale;
-    const screenWidth = width * scale;
-    const screenHeight = height * scale;
-    return { screenX, screenY, screenWidth, screenHeight };
 }
 
 function renderLayout(elements) {
@@ -217,9 +191,11 @@ function renderLayout(elements) {
         canvas.appendChild(div);
     });
 
+    // rerender constraints and lists/properties
     drawConstraintsArrows(elements, window.constraints || []);
-    renderConstraintList();
+    renderConstraintsList(window.constraints || []);
     populatePlotElementsList(elements);
+    setActiveFromId(selectedItem);
 }
 
 function makeDraggable(el) {
@@ -305,10 +281,8 @@ function addConstraint(targetId, targetAttr) {
 
 function confirmConstraint(targetId, targetAttr) {
     const constraint = {
-        target_id: targetId,
-        target_attr: targetAttr,
-        source_id: document.getElementById('constraint-source-id').value,
-        source_attr: document.getElementById('constraint-source-attr').value,
+        target: { id: targetId, attr: targetAttr },
+        source: { id: document.getElementById('constraint-source-id').value, attr: document.getElementById('constraint-source-attr').value },
         multiply: parseFloat(document.getElementById('constraint-multiply').value),
         add_before: parseFloat(document.getElementById('constraint-before').value),
         add_after: parseFloat(document.getElementById('constraint-after').value)
@@ -329,13 +303,11 @@ function toggleLock(id, attr) {
 
 function createConstraintForLock(targetId, targetAttr, value) {
     const constraint = {
-        target_id: targetId,
-        target_attr: targetAttr,
-        source_id: null,
-        source_attr: null,
-        multiply: 1,
-        add_before: value,
-        add_after: 0
+        target: { id: targetId, attr: targetAttr },
+        source: { id: null, attr: null },
+        multiply: { id: null, attr: 1 },
+        add_before: { id: null, attr: value },
+        add_after: { id: null, attr: 0 }
     };
 
     window.constraints = window.constraints || [];
@@ -410,43 +382,30 @@ function updateElementFromProps(id) {
     sendLayoutUpdate();
 }
 
-function toggleDarkMode() {
-    document.body.classList.toggle('dark');
-    localStorage.setItem('darkMode', document.body.classList.contains('dark') ? 'on' : 'off');
-}
-
-function setupResizablePanels() {
-    document.querySelectorAll('.resizer').forEach(resizer => {
-        const direction = resizer.dataset.resize;
-        const isLeft = direction === 'left';
-
-        const panelId = isLeft ? 'left-panel' : 'right-panel';
-        const panel = document.getElementById(panelId);
-
-        resizer.addEventListener('mousedown', (e) => {
-            function onMouseMove(e) {
-                const newWidth = isLeft ? e.clientX : window.innerWidth - e.clientX;
-                panel.style.width = newWidth + 'px';
-                localStorage.setItem(panelId + '-width', newWidth);
-            }
-
-            function onMouseUp() {
-                window.removeEventListener('mousemove', onMouseMove);
-                window.removeEventListener('mouseup', onMouseUp);
-            }
-
-            window.addEventListener('mousemove', onMouseMove);
-            window.addEventListener('mouseup', onMouseUp);
-        });
-    });
-}
-
 function highlightSelectedItem(selectedItem) {
     const listItems = document.querySelectorAll('.list-item');
     listItems.forEach(item => {
         item.style.backgroundColor = '';
     });
     selectedItem.style.backgroundColor = '#d0d0d0';
+}
+
+function sendDelete(elementId) {
+    const payload = getLayoutPayload();
+    payload.action = 'delete';
+    payload.element_id = elementId;
+
+    fetch('/api/update_layout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    })
+    .then(res => res.json())
+    .then(data => {
+        renderLayout(data.elements);
+        constraints = data.constraints || [];
+        saveState(getLayoutPayload());
+    });    
 }
 
 function populatePlotElementsList(elements) {
@@ -456,17 +415,20 @@ function populatePlotElementsList(elements) {
     listContainer.innerHTML = '';
 
     elements.forEach(el => {
-        const listItem = document.createElement('li');
-        listItem.textContent = `${el.text || 'Unnamed Element'}`;
-        listItem.classList.add('list-item');
+        const listItem = document.createElement('div');
+        listItem.className = 'list-item';
 
-        listItem.addEventListener('mouseenter', () => {
-            listItem.style.backgroundColor = '#aaaaaa';
-        });
+        listItem.innerHTML = `
+            <div class="element-entry">
+                <span><strong>${el.type}</strong>: ${el.text || '(Unnamed)'}</span>
+            </div>
+        `;
 
-        listItem.addEventListener('mouseleave', () => {
-            listItem.style.backgroundColor = '';
-        });
+        const deleteButton = document.createElement('button');
+        deleteButton.textContent = 'Delete';
+        deleteButton.className = 'delete-button';
+        deleteButton.onclick = () => sendDelete(el.id);
+        listItem.appendChild(deleteButton);
 
         listItem.addEventListener('click', () => {
             setActiveFromId(el.id);
@@ -477,16 +439,18 @@ function populatePlotElementsList(elements) {
     });
 }
 
-function restorePanelSizes() {
-    ['left-panel', 'right-panel'].forEach(id => {
-        const savedWidth = localStorage.getItem(id + '-width');
-        if (savedWidth) {
-            const panel = document.getElementById(id);
-            panel.style.width = savedWidth + 'px';
-        }
-    });
-}
 
+// expose functions required for global interface
+window.sendAdd = sendAdd;
+window.toggleDarkMode = toggleDarkMode;
+window.resetLayout = resetLayout;
+window.toggleAutosave = toggleAutosave;
+
+// expose functions for modifying layout and constraints
+window.toggleLock = toggleLock;
+window.updateElementFromProps = updateElementFromProps;
+
+// attach event listeners
 window.addEventListener('resize', drawGrid);
 window.addEventListener('load', () => {
     drawGrid();
@@ -499,12 +463,13 @@ window.addEventListener('DOMContentLoaded', () => {
     if (localStorage.getItem('darkMode') === 'on') {
         document.body.classList.add('dark');
     }
-
+    
     if (shouldAutosave()) {
         document.getElementById('autosave-toggle').checked = true;
     }
     updateAutosaveButtonUI();
 
+    // possibly restore state
     const saved = localStorage.getItem('pyplotdesigner-state');
     if (saved) {
         const parsed = JSON.parse(saved);

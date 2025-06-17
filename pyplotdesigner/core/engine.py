@@ -78,6 +78,23 @@ class Engine:
                 return element
         return None
 
+    def remove_element_by_id(self, element_id):
+        """
+        Safely remove an element from the engine, including constraints
+        that reference it.
+
+        :arg element_id: ID of the element to remove
+        """
+        element = self.get_element(element_id)
+        if element is None:
+            return
+
+        for constraint in self.constraints:
+            if constraint.includes_element(element):
+                self.constraints.remove(constraint)
+
+        self.elements.remove(element)
+
     def get_element_attribute(self, element_id, attr):
         """
         Get the value of a specific attribute for an element by its ID.

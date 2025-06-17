@@ -190,6 +190,10 @@ body.dark .resizer {
     overflow: hidden;
 }
 
+.left-panel h2 {
+    margin-top: 0px;
+}
+
 .left-panel h3 {
     margin: 0 0 20px 0;
     font-size: 16px;
@@ -267,7 +271,6 @@ canvas.grid-bg, canvas.arrows-bg {
 .draggable {
     position: absolute;
     border: 2px solid #444;
-    padding: 4px;
     background: #e0e0ff;
     cursor: move;
     color: #444;
@@ -282,4 +285,49 @@ canvas.grid-bg, canvas.arrows-bg {
     font-size: 0.85em;
     color: #333;
     white-space: nowrap;
+}
+
+.list-container {
+    border: 1px solid #ccc;
+    border-radius: 4px;
+    background-color: #f9f9f9;
+    max-height: 300px;
+    overflow-y: auto;
+    font-family: Arial, sans-serif;
+    font-size: 14px;
+    padding: 0;
+}
+
+.list-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px;
+    border-bottom: 1px solid #ddd;
+    cursor: pointer;
+}
+
+#elements-list {
+    padding: 0;
+} 
+
+.list-item:last-child {
+    border-bottom: none;
+}
+
+.list-item:hover {
+    background-color: #e6e6e6;
+}
+
+.delete-button {
+    background-color: #ff4d4d;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 4px 8px;
+    cursor: pointer;
+}
+
+.delete-button:hover {
+    background-color: #cc0000;
 }

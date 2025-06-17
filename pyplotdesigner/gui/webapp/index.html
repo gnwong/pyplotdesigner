@@ -9,8 +9,8 @@
 </head>
 <body>
   <div class="toolbar">
-    <button onclick="sendAdd('axis')">Add Axis</button>
-    <button onclick="sendAdd('label')">Add Label</button>
+    <button id="add-axis-btn" onclick="sendAdd('axis')">Add Axis</button>
+    <button id="add-label-btn" onclick="sendAdd('label')">Add Label</button>
     <button id="dark-mode-toggle" onclick="toggleDarkMode()">Toggle Dark Mode</button>
     <button onclick="resetLayout()">Reset</button>
     <button id="autosave-toggle" onclick="toggleAutosave()" class="toggle-button">Autosave: OFF</button>
@@ -22,8 +22,7 @@
       <div id="props" class="props-panel"></div>
       <hr />
       <h3>Elements</h3>
-      <div id="list-panel" class="list-panel">
-        <ul id="elements-list"></ul>
+      <div id="elements-list" class="list-container">
       </div>
     </div>
 
@@ -40,11 +39,11 @@
 
     <div class="right-panel" id="right-panel">
       <h2>Constraints</h2>
-      <div id="constraint-list" class="constraints-panel"></div>
+      <div id="constraints-list" class="list-container"></div>
     </div>
   </div>
 
   <div class="status-bar">Status: Ready</div>
-  <script src="app.js"></script>
+  <script type="module" src="main.js"></script>
 </body>
 </html>

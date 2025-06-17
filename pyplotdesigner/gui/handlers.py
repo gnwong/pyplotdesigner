@@ -3,7 +3,7 @@ from pyplotdesigner.core.engine import Engine
 from pyplotdesigner.core.models import Element, SetValueConstraint
 
 
-def handle_update_layout(data):
+def handle_update_layout(data, verbose=False):
 
     engine = Engine()
     elements = data.get("elements", [])
@@ -13,17 +13,46 @@ def handle_update_layout(data):
         e = Element(**el)
         engine.add_element(e)
 
+    def _get_attribute_or_value(val, default):
+        """
+        Helper function to get the value of an attribute or return the value itself.
+        """
+        if isinstance(val, dict):
+            id = val.get('id', None)
+            attr = val.get('attr', None)
+            if id is None:
+                return float(attr)
+            elattr = engine.get_element_attribute(id, attr)
+            return elattr if elattr is not None else default
+        elif isinstance(val, (int, float)):
+            return float(val)
+        return default
+
     for constraint in constraints:
-        target = engine.get_element_attribute(constraint.get('target_id', None), constraint.get('target_attr', None))
-        source = engine.get_element_attribute(constraint.get('source_id', None), constraint.get('source_attr', None))
+        target = constraint.get('target', None)
+        source = constraint.get('source', None)
+        multiply = constraint.get('multiply', None)
+        add_before = constraint.get('add_before', None)
+        add_after = constraint.get('add_after', None)
+
+        # all constraints must have a target
         if target is None:
             continue
+        target = engine.get_element_attribute(target.get('id', None),
+                                              target.get('attr', None))
+
+        # source is either an element attribute or None
+        if source is not None:
+            source = engine.get_element_attribute(source.get('id', None),
+                                                  source.get('attr', None))
+
+        # other fields could be element attributes, numeric values, or None
+        multiply = _get_attribute_or_value(multiply, 1.)
+        add_before = _get_attribute_or_value(add_before, 0.)
+        add_after = _get_attribute_or_value(add_after, 0.)
+
         engine.add_constraint(SetValueConstraint(
-            target,
-            source,
-            multiply=constraint.get("multiply", 1.0),
-            add_before=constraint.get("add_before", 0.0),
-            add_after=constraint.get("add_after", 0.0)
+            target, source, multiply=multiply, add_before=add_before, add_after=add_after
         ))
 
     action = data.get("action", None)
@@ -33,21 +62,25 @@ def handle_update_layout(data):
         if new_type == "axis":
             engine.add_empty_element(element_type="axis")
         else:
-            print(new_type, 'not recognized')  # TODO
+            print('action:add', new_type, 'not recognized')
+    elif action == "delete":
+        element_id = data.get("element_id", None)
+        engine.remove_element_by_id(element_id)
     elif action is not None:
-        print('action not recognized:', action)  # TODO
+        print('action not recognized:', action)
         for key in data:
             print(key, data[key])
 
-    print('\nEngine info:')  # TODO
-    engine.print_info()  # TODO
-    print()  # TODO
+    if verbose:
+        print('Engine info:')
+        engine.print_info()
 
     try:
-        engine.solve(verbose=True)
+        engine.solve()
     except RuntimeError as e:
         return JSONResponse(status_code=400, content={"error": str(e)})
 
     return JSONResponse(content={
-        "elements": [e.to_dict() for e in engine.elements]
+        "elements": [e.to_dict() for e in engine.elements],
+        "constraints": [c.to_dict() for c in engine.constraints]
     })

@@ -53,7 +53,7 @@ class Element:
         self.type = type
         self.text = text
 
-        # Expose symbolic refs
+        # expose symbolic refs
         self.x = Variable(self, "_x")
         self.y = Variable(self, "_y")
         self.width = Variable(self, "_width")
@@ -86,6 +86,13 @@ class SetValueConstraint:
     def _resolve(self, value_or_var):
         return value_or_var.get() if hasattr(value_or_var, 'get') else value_or_var
 
+    def includes_element(self, element):
+        return self.target.owner == element or \
+            (hasattr(self.source, 'owner') and self.source.owner == element) or \
+            (isinstance(self.multiply, Variable) and self.multiply.owner == element) or \
+            (isinstance(self.add_before, Variable) and self.add_before.owner == element) or \
+            (isinstance(self.add_after, Variable) and self.add_after.owner == element) 
+
     def apply(self):
         src = self._resolve(self.source)
         before = self._resolve(self.add_before)
@@ -101,3 +108,21 @@ class SetValueConstraint:
     def __repr__(self):
         return f"Constraint({self.target} = ({self.source} + " \
             f"{self.add_before}) * {self.multiply} + {self.add_after})"
+
+    def _get_dict_for_attribute(self, attribute):
+        d = dict(id=None, attr=None)
+        if isinstance(attribute, Variable):
+            d['id'] = attribute.owner.id
+            d['attr'] = attribute.attr[1:]
+        elif isinstance(attribute, (int, float)):
+            d['attr'] = attribute
+        return d
+
+    def to_dict(self):
+        d = {}
+        d['target'] = self._get_dict_for_attribute(self.target)
+        d['source'] = self._get_dict_for_attribute(self.source)
+        d['multiply'] = self._get_dict_for_attribute(self.multiply)
+        d['add_before'] = self._get_dict_for_attribute(self.add_before)
+        d['add_after'] = self._get_dict_for_attribute(self.add_after)
+        return d
