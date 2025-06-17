@@ -124,7 +124,10 @@ export function sendLayoutUpdate() {
 }
 
 function processReceivedPayload(data) {
-    console.log('got payload', data.constraints);
+    if (data.error) {
+        console.error('Error received from server:', data.error);
+        return;
+    }
     window.constraints = data.constraints || [];
     window.constants = data.constants || [];
     renderLayout(data.elements);

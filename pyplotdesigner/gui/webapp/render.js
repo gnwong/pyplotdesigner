@@ -372,7 +372,7 @@ function createConstraintComponentBlock({ name, label, value = null, showSelect 
                     input.dataset.attr = null;
                     input.value = `${reference.id}`;
                 } else if (reference.type === 'element') {
-                    let attr = prompt("Enter attribute (x, y, width, height):", "x");
+                    let attr = prompt("Enter attribute (x, y, width, height, left, right, top, bottom):", "x");
                     input.dataset.type = 'element';
                     input.dataset.vid = reference.id;
                     input.dataset.attr = attr;

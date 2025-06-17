@@ -17,7 +17,10 @@ def handle_update_layout(data, verbose=False):
             if id is None:
                 return float(attr)
             if attr is None:
-                constv = design.get_constant_value(id)
+                try:
+                    constv = design.get_constant_value(id)
+                except ValueError:
+                    return None
                 return constv if constv is not None else default
             elattr = design.get_element_attribute(id, attr)
             return elattr if elattr is not None else default
@@ -60,7 +63,7 @@ def handle_update_layout(data, verbose=False):
             source = design.get_element_attribute(source.get('id', None),
                                                   source.get('attr', None))
 
-        # other fields could be element attributes, numeric values, or None
+        # other fields could be element attributes, numeric values, constants, or None
         multiply = _get_attribute_or_value(multiply, 1.)
         add_before = _get_attribute_or_value(add_before, 0.)
         add_after = _get_attribute_or_value(add_after, 0.)
@@ -98,13 +101,21 @@ def handle_update_layout(data, verbose=False):
         print('Design info:')
         design.print_info()
 
+    # try to solve, returning error messsage in response if it fails
+    error_message = None
+
     try:
         design.solve()
     except RuntimeError as e:
-        return JSONResponse(status_code=400, content={"error": str(e)})
+        error_message = dict(content=str(e))
 
-    return JSONResponse(content={
+    response = {
         "elements": [e.to_dict() for e in design.elements],
         "constraints": [c.to_dict() for c in design.constraints],
         "constants": [c.to_dict() for c in design.constants]
-    })
+    }
+
+    if error_message:
+        response['error'] = error_message
+
+    return JSONResponse(content=response)

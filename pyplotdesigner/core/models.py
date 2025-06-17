@@ -53,6 +53,26 @@ class Variable:
         return f"{self.owner.id}.{self.attr}"
 
 
+class ComputedVariable(Variable):
+    def __init__(self, owner, attr, get_fn, set_fn, label=None):
+        super().__init__(owner=owner, attr=attr)
+        self._get_fn = get_fn
+        self._set_fn = set_fn
+        self.label = label or "computed"
+
+    def get(self):
+        return self._get_fn()
+
+    def set(self, value):
+        self._set_fn(value)
+
+    def to_dict(self):
+        return {"id": self.owner.id, "attr": self.attr[1:]}
+
+    def __repr__(self):
+        return self.label or super().__repr__()
+
+
 class Constant:
     def __init__(self, id, value):
         self.id = id
@@ -84,6 +104,42 @@ class Element:
         self.y = Variable(self, "_y")
         self.width = Variable(self, "_width")
         self.height = Variable(self, "_height")
+
+        # add aliases
+        self.top = self.y
+        self.left = self.x
+
+        # add computed variables
+        self.right = ComputedVariable(
+            owner=self,
+            attr="_right",
+            get_fn=lambda: self._x + self._width,
+            set_fn=lambda val: setattr(self, "_x", val - self._width)
+        )
+
+        self.bottom = ComputedVariable(
+            owner=self,
+            attr="_bottom",
+            get_fn=lambda: self._y + self._height,
+            set_fn=lambda val: setattr(self, "_y", val - self._height)
+        )
+
+        self.center_x = ComputedVariable(
+            owner=self,
+            attr="_center_x",
+            get_fn=lambda: self._x + self._width / 2,
+            set_fn=lambda val: setattr(self, "_x", val - self._width / 2)
+        )
+
+        self.center_y = ComputedVariable(
+            owner=self,
+            attr="_center_y",
+            get_fn=lambda: self._y + self._height / 2,
+            set_fn=lambda val: setattr(self, "_y", val - self._height / 2)
+        )
+
+    def get_valid_attributes(self):
+        return ['x', 'y', 'width', 'height', 'left', 'top', 'right', 'bottom', 'center_x', 'center_y']
 
     def __repr__(self):
         return f"Element(id={self.id}, type={self.type}, x={self._x}, y={self._y}, " \

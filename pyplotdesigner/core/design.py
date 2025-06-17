@@ -218,7 +218,7 @@ class Design:
 
         # start with all known values from the elements
         for element in self.elements:
-            for attr in ['x', 'y', 'width', 'height']:
+            for attr in element.get_valid_attributes():
                 var = getattr(element, attr, None)
                 if isinstance(var, Variable):
                     resolved.add(var)
