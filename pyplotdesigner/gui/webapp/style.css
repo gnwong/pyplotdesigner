@@ -291,7 +291,7 @@ canvas.grid-bg, canvas.arrows-bg {
     border: 1px solid #ccc;
     border-radius: 4px;
     background-color: #f9f9f9;
-    max-height: 300px;
+    max-height: 400px;
     overflow-y: auto;
     font-family: Arial, sans-serif;
     font-size: 14px;

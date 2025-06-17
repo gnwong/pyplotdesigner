@@ -1,17 +1,9 @@
 from fastapi.responses import JSONResponse
 from pyplotdesigner.core.engine import Engine
-from pyplotdesigner.core.models import Element, SetValueConstraint
+from pyplotdesigner.core.models import Element, SetValueConstraint, Constant
 
 
 def handle_update_layout(data, verbose=False):
-
-    engine = Engine()
-    elements = data.get("elements", [])
-    constraints = data.get("constraints", [])
-
-    for el in elements:
-        e = Element(**el)
-        engine.add_element(e)
 
     def _get_attribute_or_value(val, default):
         """
@@ -27,6 +19,15 @@ def handle_update_layout(data, verbose=False):
         elif isinstance(val, (int, float)):
             return float(val)
         return default
+
+    engine = Engine()
+    elements = data.get("elements", [])
+    constraints = data.get("constraints", [])
+    constants = data.get("constants", [])
+
+    for el in elements:
+        e = Element(**el)
+        engine.add_element(e)
 
     for constraint in constraints:
         target = constraint.get('target', None)
@@ -55,12 +56,21 @@ def handle_update_layout(data, verbose=False):
             target, source, multiply=multiply, add_before=add_before, add_after=add_after
         ))
 
+    for constant in constants:
+        id = constant.get('id', None)
+        value = constant.get('value', None)
+        if id is None or value is None:
+            continue
+        engine.add_constant(id=id, value=value)
+
     action = data.get("action", None)
 
     if action == "add":
         new_type = data.get("new_type", None)
         if new_type == "axis":
             engine.add_empty_element(element_type="axis")
+        elif new_type == "constant":
+            engine.add_constant()
         else:
             print('action:add', new_type, 'not recognized')
     elif action == "delete":
@@ -82,5 +92,6 @@ def handle_update_layout(data, verbose=False):
 
     return JSONResponse(content={
         "elements": [e.to_dict() for e in engine.elements],
-        "constraints": [c.to_dict() for c in engine.constraints]
+        "constraints": [c.to_dict() for c in engine.constraints],
+        "constants": [c.to_dict() for c in engine.constants]
     })

@@ -43,6 +43,21 @@ class Variable:
         return f"{self.owner.id}.{self.attr}"
 
 
+class Constant:
+    def __init__(self, id, value):
+        self.id = id
+        self.value = value
+
+    def __repr__(self):
+        return f"Constant(id={self.id}, value={self.value})"
+
+    def to_dict(self):
+        return {
+            "id": self.id,
+            "value": self.value
+        }
+    
+
 class Element:
     def __init__(self, id, x, y, width, height, type, text=""):
         self.id = id

@@ -6,3 +6,13 @@ export const scale = 200;
 export const borderWidth = 2;
 export const offsetX = scale / 2;
 export const offsetY = scale / 2;
+
+let selectedItem = null;
+
+export function setSelectedItem(id) {
+    selectedItem = id;
+}
+
+export function getSelectedItem() {
+    return selectedItem;
+}

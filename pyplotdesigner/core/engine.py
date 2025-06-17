@@ -20,7 +20,7 @@ THE SOFTWARE.
 """
 
 
-from .models import Variable, Element
+from .models import Variable, Element, Constant
 
 
 class Engine:
@@ -39,6 +39,7 @@ class Engine:
         """
         self.elements = []
         self.constraints = []
+        self.constants = []
 
     def print_info(self):
         """
@@ -48,6 +49,19 @@ class Engine:
             print(element)
         for constraint in self.constraints:
             print(constraint)
+
+    def add_constant(self, id=None, value=0.0):
+        """
+        Add a constant value to the engine, which can be used in constraints.
+
+        :arg id: unique identifier for the constant (default=None, auto-generated)
+        :arg value: numeric value of the constant (default=0.0)
+        """
+        if id is None:
+            id = self.get_unique_id(prefix="constant")
+        constant = Constant(id=id, value=value)
+        constant.value = value
+        self.constants.append(constant)
 
     def add_empty_element(self, element_type="axis", id=None, text=None):
         """
@@ -120,7 +134,8 @@ class Engine:
         """
         for nid in range(10000):
             unique_id = f"{prefix}{nid}"
-            if not any(el.id == unique_id for el in self.elements):
+            if not any(el.id == unique_id for el in self.elements) and \
+               not any(c.id == unique_id for c in self.constants):
                 return unique_id
         raise RuntimeError("Failed to generate unique ID after 10000 attempts")
 
