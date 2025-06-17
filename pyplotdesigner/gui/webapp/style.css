@@ -201,6 +201,10 @@ body.dark .resizer {
     font-size: 16px;
 }
 
+.left-panel h4 {
+    margin-bottom: 8px;
+}
+
 .left-panel hr {
     border: none;
     border-top: 1px solid #ccc;
@@ -254,6 +258,17 @@ input[readonly] {
 .list-panel h4 {
     margin: 0 0 5px 0;
     font-size: 16px;
+}
+
+.constraint-info {
+    background-color: #eef6ff;
+    border-left: 4px solid #002144;
+    padding: 8px 12px;
+    margin: 12px 0;
+    font-size: 14px;
+    font-style: italic;
+    color: #003366;
+    border-radius: 4px;
 }
 
 #elements-list {
@@ -329,7 +344,7 @@ canvas.grid-bg, canvas.arrows-bg {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 8px;
+    padding: 4px;
     border-bottom: 1px solid #ddd;
     cursor: pointer;
     font-family: Arial, sans-serif;
@@ -373,5 +388,20 @@ canvas.grid-bg, canvas.arrows-bg {
 }
 
 .add-constraint-button:hover {
+    background-color: #0056b3;
+}
+
+.select-target-button {
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 4px;
+    padding: 6px 10px;
+    cursor: pointer;
+    font-size: 14px;
+    transition: background-color 0.2s;
+}
+
+.select-target-button:hover {
     background-color: #0056b3;
 }

@@ -1,4 +1,4 @@
-function getNameOfElement(id) {
+export function getNameOfElement(id) {
     const element = document.querySelector(`[data-id="${id}"]`);
     if (element) {
         return element.dataset.text;
@@ -6,7 +6,7 @@ function getNameOfElement(id) {
     return id;
 }
 
-function getVariableDescription(varinfo) {
+export function getVariableDescription(varinfo) {
     if (!varinfo || typeof varinfo !== 'object') return 0;
     if (varinfo.id === null) {
       return varinfo.attr != null ? varinfo.attr : 0;

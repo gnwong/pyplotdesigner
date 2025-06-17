@@ -124,7 +124,6 @@ export function sendLayoutUpdate() {
 }
 
 function processReceivedPayload(data) {
-    console.log('getting new constants', data.constants);
     window.constraints = data.constraints || [];
     window.constants = data.constants || [];
     renderLayout(data.elements);
