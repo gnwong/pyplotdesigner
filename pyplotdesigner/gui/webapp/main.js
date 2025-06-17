@@ -1,9 +1,8 @@
-import { canvas, arrowCanvas, scale, borderWidth, offsetX, offsetY, setSelectedItem, getSelectedItem } from './shared.js';
+import { canvas, setSelectedItem } from './shared.js';
 import { restorePanelSizes, toggleDarkMode, setupResizablePanels } from './ui.js';
-import { drawGrid, getImageCoords, getScreenCoords } from './canvas.js';
-import { getConstraintDescription,  } from './constraints.js';
-import { getLayoutPayload, sendAdd, sendDelete, sendLayoutUpdate, saveState } from './api.js'
-import { renderConstantsList, renderConstraintsList, renderLayout, updateElementFromProps } from './render.js'
+import { drawGrid } from './canvas.js';
+import { sendAdd, sendLayoutUpdate } from './api.js'
+import { renderLayout, updateElementFromProps } from './render.js'
 
 function shouldAutosave() {
     return localStorage.getItem('autosave-enabled') === 'true';

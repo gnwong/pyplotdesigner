@@ -1,4 +1,4 @@
-import { canvas, gridCanvas, arrowCanvas, scale, borderWidth, offsetX, offsetY } from './shared.js';
+import { canvas, gridCanvas, scale, offsetX, offsetY } from './shared.js';
 
 export function drawGrid() {
     const ctx = gridCanvas.getContext('2d');

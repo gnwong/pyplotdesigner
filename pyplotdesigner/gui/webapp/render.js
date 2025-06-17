@@ -1,6 +1,6 @@
 import { canvas, arrowCanvas, borderWidth, setSelectedItem, getSelectedItem } from './shared.js';
 import { drawGrid, getImageCoords, getScreenCoords } from './canvas.js';
-import { getConstraintDescription, constraintsEqual } from './constraints.js';
+import { getConstraintDescription } from './constraints.js';
 import { sendLayoutUpdate, sendDelete, deleteConstant, deleteConstraint } from './api.js';
 
 export function renderConstantsList(constants) {
