@@ -23,9 +23,9 @@ THE SOFTWARE.
 from .models import Variable, Element, Constant
 
 
-class Engine:
+class Design:
     """
-    The Engine is responsible for managing layout elements and constraints, and
+    The Design is responsible for managing layout elements and constraints, and
     solving them to compute final positions and dimensions for all elements.
 
     It performs dependency analysis on the constraints to determine a valid
@@ -52,7 +52,7 @@ class Engine:
 
     def add_constant(self, id=None, value=0.0):
         """
-        Add a constant value to the engine, which can be used in constraints.
+        Add a constant value to the design, which can be used in constraints.
 
         :arg id: unique identifier for the constant (default=None, auto-generated)
         :arg value: numeric value of the constant (default=0.0)
@@ -60,7 +60,6 @@ class Engine:
         if id is None:
             id = self.get_unique_id(prefix="constant")
         constant = Constant(id=id, value=value)
-        constant.value = value
         self.constants.append(constant)
 
     def update_constant(self, id, constant):
@@ -123,7 +122,7 @@ class Engine:
 
     def remove_element_by_id(self, element_id):
         """
-        Safely remove an element from the engine, including constraints
+        Safely remove an element from the design, including constraints
         that reference it.
 
         :arg element_id: ID of the element to remove
@@ -137,6 +136,21 @@ class Engine:
                 self.constraints.remove(constraint)
 
         self.elements.remove(element)
+
+    def get_constant_value(self, constant):
+        """
+        Get the value of a constant by its ID.
+
+        :arg constant: ID of the constant to retrieve
+        """
+        if constant is None:
+            return None
+        if isinstance(constant, Constant):
+            return constant.value
+        const = next((c for c in self.constants if c.id == constant), None)
+        if const is None:
+            raise ValueError(f"Constant with ID '{constant}' not found")
+        return const.value
 
     def get_element_attribute(self, element_id, attr):
         """
@@ -170,7 +184,7 @@ class Engine:
 
     def add_element(self, element):
         """
-        Register a new layout element in the engine.
+        Register a new layout element in the design.
 
         :arg element: the layout element to track
         """
@@ -208,6 +222,8 @@ class Engine:
                 var = getattr(element, attr, None)
                 if isinstance(var, Variable):
                     resolved.add(var)
+        for constant in self.constants:
+            resolved.add(constant.value)
 
         # remove targets since they are assigned via constraints
         for constraint in self.constraints:

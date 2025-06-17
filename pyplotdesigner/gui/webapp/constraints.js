@@ -9,9 +9,11 @@ export function getNameOfElement(id) {
 export function getVariableDescription(varinfo) {
     if (!varinfo || typeof varinfo !== 'object') return 0;
     if (varinfo.id === null) {
-      return varinfo.attr != null ? varinfo.attr : 0;
+        return varinfo.attr != null ? varinfo.attr : 0;
+    } else if (varinfo.attr === null) {
+        return `${getNameOfElement(varinfo.id)}`;
     } else {
-      return `${getNameOfElement(varinfo.id)}.${varinfo.attr || 'null'}`;
+        return `${getNameOfElement(varinfo.id)}.${varinfo.attr}`;
     }
 }
 

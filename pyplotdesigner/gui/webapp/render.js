@@ -354,7 +354,6 @@ function createConstraintComponentBlock({ name, label, value = null, showSelect 
         input.dataset.type = 'constant';
         input.dataset.vid = value.id;
         input.dataset.attr = null;
-        // TODO
         input.value = value;
     }
 
@@ -401,12 +400,18 @@ function extractConstraintComponent(input) {
         return isNaN(val) ? 0 : val;
     }
 
-    if ((type === 'element' || type === 'constant') && vid) {
-        if (vid === 'null' || vid === '') {
+    if (type === 'element') {
+        if (vid === 'null' || vid === '' || vid === null) {
             return { };
         }
-
         return { id: vid, attr: attr || 'value' };
+    }
+
+    if (type === 'constant') {
+        if (vid === 'null' || vid === '' || vid === null) {
+            return { };
+        }
+        return { id: vid };
     }
 
     return null;

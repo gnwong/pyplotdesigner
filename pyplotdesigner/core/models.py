@@ -31,6 +31,16 @@ class Variable:
     def set(self, value):
         setattr(self.owner, self.attr, value)
 
+    def to_dict(self):
+        d = dict(id=None, attr=None)
+        if isinstance(self.owner, Constant):
+            d['id'] = self.owner.id
+            d['attr'] = None
+            return d
+        d['id'] = self.owner.id
+        d['attr'] = self.attr[1:]
+        return d
+
     def __hash__(self):
         return hash((id(self.owner), self.attr))
 
@@ -46,15 +56,16 @@ class Variable:
 class Constant:
     def __init__(self, id, value):
         self.id = id
-        self.value = value
+        self._value = value
+        self.value = Variable(self, "_value")
 
     def __repr__(self):
-        return f"Constant(id={self.id}, value={self.value})"
+        return f"Constant(id={self.id}, value={self._value})"
 
     def to_dict(self):
         return {
             "id": self.id,
-            "value": self.value
+            "value": self._value
         }
 
 
@@ -127,8 +138,7 @@ class SetValueConstraint:
     def _get_dict_for_attribute(self, attribute):
         d = dict(id=None, attr=None)
         if isinstance(attribute, Variable):
-            d['id'] = attribute.owner.id
-            d['attr'] = attribute.attr[1:]
+            d = attribute.to_dict()
         elif isinstance(attribute, (int, float)):
             d['attr'] = attribute
         return d
