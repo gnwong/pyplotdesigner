@@ -123,7 +123,7 @@ export function sendLayoutUpdate() {
     });
 }
 
-function processReceivedPayload(data) {
+export function processReceivedPayload(data) {
     if (data.error) {
         console.error('Error received from server:', data.error);
         return;

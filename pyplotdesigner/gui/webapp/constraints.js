@@ -27,9 +27,15 @@ export function getConstraintDescription(constraint) {
     let expr = '';
     if (add_before !== 0 && source !== 0) expr = `(${expr} + ${add_before})`;
     else if (add_before !== 0) expr = `${add_before}`;
-    else if (source !== 0) expr = `${source}`;
+    else if (source !== 0 && source != null) expr = `${source}`;
     if (multiply !== 1) expr = `${expr} × ${multiply}`;
-    if (add_after !== 0) expr = `${expr} + ${add_after}`;
+    if (add_after !== 0 && add_after != null) {
+        if (expr === '') {
+            expr = `${add_after}`;
+        } else {
+            expr = `${expr} + ${add_after}`;
+        }
+    }
   
     return `${target} ← ${expr}`;
 }

@@ -1,7 +1,7 @@
 import { canvas, setSelectedItem } from './shared.js';
 import { restorePanelSizes, toggleDarkMode, setupResizablePanels } from './ui.js';
 import { drawGrid } from './canvas.js';
-import { sendAdd, sendLayoutUpdate } from './api.js'
+import { sendAdd, sendLayoutUpdate, getLayoutPayload, processReceivedPayload } from './api.js'
 import { renderLayout, updateElementFromProps, updateConstantFromProps } from './render.js'
 
 function shouldAutosave() {
@@ -33,43 +33,38 @@ canvas.addEventListener('click', (e) => {
     }
 });
 
-function addConstraint(targetId, targetAttr) {
-    const allIds = Array.from(document.querySelectorAll('.draggable')).map(el => el.dataset.id);
-    const form = document.getElementById('constraint-form');
-    form.innerHTML = `
-        <hr><p><strong>Add Constraint</strong></p>
-        <label>Source ID:
-            <select id="constraint-source-id">
-                ${allIds.map(id => `<option value="${id}">${id}</option>`).join('')}
-            </select>
-        </label><br>
-        <label>Source Attr:
-            <select id="constraint-source-attr">
-                <option value="x">x</option>
-                <option value="y">y</option>
-                <option value="width">width</option>
-                <option value="height">height</option>
-            </select>
-        </label><br>
-        <label>Multiply: <input type="number" id="constraint-multiply" value="1"></label><br>
-        <label>Add Before: <input type="number" id="constraint-before" value="0"></label><br>
-        <label>Add After: <input type="number" id="constraint-after" value="0"></label><br>
-        <button onclick="confirmConstraint('${targetId}', '${targetAttr}')">Confirm</button>
-    `;
-}
+function openImportExportModal() {
+    const modal = document.createElement('div');
+    modal.className = 'import-export-modal';
 
-function confirmConstraint(targetId, targetAttr) {
-    const constraint = {
-        target: { id: targetId, attr: targetAttr },
-        source: { id: document.getElementById('constraint-source-id').value, attr: document.getElementById('constraint-source-attr').value },
-        multiply: parseFloat(document.getElementById('constraint-multiply').value),
-        add_before: parseFloat(document.getElementById('constraint-before').value),
-        add_after: parseFloat(document.getElementById('constraint-after').value)
+    const textarea = document.createElement('textarea');
+    textarea.className = 'import-export-textarea';
+    textarea.value = btoa(JSON.stringify(getLayoutPayload()));
+
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'Close';
+    closeButton.onclick = () => modal.remove();
+
+    const importButton = document.createElement('button');
+    importButton.textContent = 'Import';
+    importButton.onclick = () => {
+        try {
+            const data = JSON.parse(atob(textarea.value));
+            processReceivedPayload(data);
+            modal.remove();
+        } catch (err) {
+            alert('Unable to load layout: ' + err.message);
+        }
     };
 
-    window.constraints = window.constraints || [];
-    window.constraints.push(constraint);
-    sendLayoutUpdate();
+    const controls = document.createElement('div');
+    controls.className = 'import-export-controls';
+    controls.appendChild(importButton);
+    controls.appendChild(closeButton);
+
+    modal.appendChild(textarea);
+    modal.appendChild(controls);
+    document.body.appendChild(modal);
 }
 
 function toggleLock(id, attr) {
@@ -99,6 +94,7 @@ window.sendAdd = sendAdd;
 window.toggleDarkMode = toggleDarkMode;
 window.resetLayout = resetLayout;
 window.toggleAutosave = toggleAutosave;
+window.openImportExportModal = openImportExportModal;
 
 // expose functions for modifying layout and constraints
 window.toggleLock = toggleLock;

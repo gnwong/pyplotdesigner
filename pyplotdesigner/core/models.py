@@ -139,7 +139,8 @@ class Element:
         )
 
     def get_valid_attributes(self):
-        return ['x', 'y', 'width', 'height', 'left', 'top', 'right', 'bottom', 'center_x', 'center_y']
+        return ['x', 'y', 'width', 'height',
+                'left', 'top', 'right', 'bottom', 'center_x', 'center_y']
 
     def __repr__(self):
         return f"Element(id={self.id}, type={self.type}, x={self._x}, y={self._y}, " \
@@ -172,8 +173,8 @@ class SetValueConstraint:
         return self.target.owner == element or \
             (hasattr(self.source, 'owner') and self.source.owner == element) or \
             (isinstance(self.multiply, Variable) and self.multiply.owner == element) or \
-            (isinstance(self.add_before, Variable) and self.add_before.owner == element) or \
-            (isinstance(self.add_after, Variable) and self.add_after.owner == element) 
+            (isinstance(self.add_after, Variable) and self.add_after.owner == element) or \
+            (isinstance(self.add_before, Variable) and self.add_before.owner == element)
 
     def apply(self):
         src = self._resolve(self.source)
