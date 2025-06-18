@@ -1,20 +1,7 @@
 import { canvas, arrowCanvas, borderWidth, setSelectedItem, getSelectedItem, startSelecting, completeSelection } from './shared.js';
 import { drawGrid, getImageCoords, getScreenCoords } from './canvas.js';
 import { getConstraintDescription, getNameOfElement, getVariableDescription, constraintsEqual } from './constraints.js';
-import { sendLayoutUpdate, sendDelete, deleteConstant, deleteConstraint, updateConstant } from './api.js';
-
-export function updateConstantFromProps(id) {
-    const inputs = props.querySelectorAll('input[data-prop]');
-    const values = {};
-    inputs.forEach(input => {
-        const prop = input.dataset.prop;
-        const parsedValue = parseFloat(input.value);
-        values[prop] = isNaN(parsedValue) ? input.value : parsedValue;
-    });
-    updateConstant(id, values);
-    sendLayoutUpdate();
-    renderConstantDetail(values);
-}
+import { sendLayoutUpdate, sendDelete, deleteConstant, deleteConstraint } from './api.js';
 
 function renderConstantDetail(constant) {
     let props = document.getElementById('props');
@@ -79,12 +66,17 @@ export function renderConstraintsList(constraints) {
     });
 }
 
-export function renderLayout(elements) {
+export function renderLayout(elements = null) {
     const existingGrid = document.getElementById('grid');
     canvas.innerHTML = '';
     canvas.appendChild(existingGrid);
     canvas.appendChild(arrowCanvas);
     drawGrid();
+
+    if (!elements) {
+        elements = window.elements || [];
+    }
+    window.elements = elements;
 
     elements.forEach(el => {
         const { screenX, screenY, screenWidth, screenHeight } = getScreenCoords(el.x, el.y, el.width, el.height);
@@ -422,6 +414,10 @@ function openConstraintEditor(constraint) {
     const editor = document.getElementById('constraint-editor');
     editor.innerHTML = '';
 
+    const editorHeading = document.createElement('h4');
+    editorHeading.textContent = 'Custom Constraint Editor';
+    editor.appendChild(editorHeading);
+
     const info = document.createElement('div');
     info.className = 'constraint-info';
     info.innerHTML = '<em>target ← a + m * (source + b)</em>';
@@ -476,7 +472,7 @@ function openConstraintEditor(constraint) {
 function addPresetConstraint(elementId, type) {
 
     switch (type) {
-        case 'aspectRatioH':
+        case 'aspectRatioH': {
             let ratioH = prompt("Enter aspect ratio (e.g., 0.5 for H = 0.5×W):", "1");
             if (!ratioH || isNaN(parseFloat(ratioH))) return;
             window.constraints.push({
@@ -486,8 +482,10 @@ function addPresetConstraint(elementId, type) {
                 add_before: 0,
                 add_after: 0
               });
-            break;
-        case 'aspectRatioW':
+            return;
+        }
+
+        case 'aspectRatioW': {
             let ratioW = prompt("Enter aspect ratio (e.g., 0.5 for W = 0.5×H):", "1");
             if (!ratioW || isNaN(parseFloat(ratioW))) return;
             window.constraints.push({
@@ -497,11 +495,68 @@ function addPresetConstraint(elementId, type) {
                 add_before: 0,
                 add_after: 0
               });
-            break;
-        case 'matchWidth':
-            break;
-        case 'matchHeight':
-            break;
+            return;
+        }
+
+        case 'alignLeft': {
+            alert("Click the element you want to align with.");
+            startSelecting(reference => {
+                window.constraints.push({
+                    target: { id: elementId, attr: 'x' },
+                    source: { id: reference.id, attr: 'x' },
+                    multiply: 1,
+                    add_before: 0,
+                    add_after: 0
+                });
+                sendLayoutUpdate();
+            });
+            return;
+        }
+
+        case 'alignBottom': {
+            alert("Click the element you want to align with.");
+            startSelecting(reference => {
+                window.constraints.push({
+                    target: { id: elementId, attr: 'y' },
+                    source: { id: reference.id, attr: 'y' },
+                    multiply: 1,
+                    add_before: 0,
+                    add_after: 0
+                });
+                sendLayoutUpdate();
+            });
+            return;
+        }
+            
+        case 'matchWidth': {
+            alert("Click the element whose width you want to match.");
+            startSelecting(reference => {
+                window.constraints.push({
+                    target: { id: elementId, attr: 'width' },
+                    source: { id: reference.id, attr: 'width' },
+                    multiply: 1,
+                    add_before: 0,
+                    add_after: 0
+                });
+                sendLayoutUpdate();
+            });
+            return;
+        }
+
+        case 'matchHeight': {
+            alert("Click the element whose height you want to match.");
+            startSelecting(reference => {
+                window.constraints.push({
+                    target: { id: elementId, attr: 'height' },
+                    source: { id: reference.id, attr: 'height' },
+                    multiply: 1,
+                    add_before: 0,
+                    add_after: 0
+                });
+                sendLayoutUpdate();
+            });
+            return;
+        }
     }
 
     sendLayoutUpdate();
@@ -522,6 +577,14 @@ function renderElementConstraintsSection(el) {
     container.appendChild(createConstraintPropBlock(el.dataset.id, 'Width', 'width'));
     container.appendChild(createConstraintPropBlock(el.dataset.id, 'Height', 'height'));
 
+    const editorSection = document.createElement('div');
+    const constraintRow = document.createElement('div');
+    constraintRow.className = 'preset-row';
+    constraintRow.id = 'constraint-editor';
+
+    editorSection.appendChild(constraintRow);
+    container.appendChild(editorSection);
+
     const presetSection = document.createElement('div');
     presetSection.className = 'constraint-add-buttons';
 
@@ -535,10 +598,10 @@ function renderElementConstraintsSection(el) {
     const presets = [
         { label: 'Aspect Ratio (Width → Height)', type: 'aspectRatioH' },
         { label: 'Aspect Ratio (Height → Width)', type: 'aspectRatioW' },
-        /*{ label: 'Match Width', type: 'matchWidth' },
-        { label: 'Match Height', type: 'matchHeight' },
-        { label: 'Center Horizontally', type: 'centerX' },
-        { label: 'Center Vertically', type: 'centerY' }*/
+        { label: 'Align Left', type: 'alignLeft' },
+        { label: 'Align Bottom', type: 'alignBottom' },
+        { label: 'Match Width', type: 'matchWidth' },
+        { label: 'Match Height', type: 'matchHeight' }
     ];
 
     presets.forEach(preset => {
@@ -556,19 +619,6 @@ function renderElementConstraintsSection(el) {
 
     presetSection.appendChild(presetRow);
     container.appendChild(presetSection);
-
-    const editorSection = document.createElement('div');
-
-    const editorHeading = document.createElement('h4');
-    editorHeading.textContent = 'Custom Constraint Editor';
-    editorSection.appendChild(editorHeading);
-
-    const constraintRow = document.createElement('div');
-    constraintRow.className = 'preset-row';
-    constraintRow.id = 'constraint-editor';
-
-    editorSection.appendChild(constraintRow);
-    container.appendChild(editorSection);
 }
 
 function makeDraggable(el) {

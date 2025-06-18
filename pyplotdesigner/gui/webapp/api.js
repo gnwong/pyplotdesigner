@@ -1,4 +1,4 @@
-import { canvas, borderWidth } from './shared.js';
+import { canvas, borderWidth, setScale, getScale, getFigureSize, setFigureSize } from './shared.js';
 import { getImageCoords } from './canvas.js';
 import { renderLayout, renderConstantsList, renderConstraintsList } from './render.js';
 import { constraintsEqual } from './constraints.js';
@@ -30,7 +30,10 @@ export function getLayoutPayload() {
 
     const viewport = {
         width: canvas.clientWidth,
-        height: canvas.clientHeight
+        height: canvas.clientHeight,
+        scale: getScale(),
+        figureWidth: getFigureSize().width,
+        figureHeight: getFigureSize().height
     };
 
     return { elements, constraints, constants, viewport };
@@ -130,6 +133,12 @@ export function processReceivedPayload(data) {
     }
     window.constraints = data.constraints || [];
     window.constants = data.constants || [];
+    if (data.viewport?.scale !== undefined) {
+        setScale(data.viewport.scale);
+    }
+    if (data.viewport?.figureWidth !== undefined && data.viewport?.figureHeight !== undefined) {
+        setFigureSize(data.viewport.figureWidth, data.viewport.figureHeight);
+    }
     renderLayout(data.elements);
     saveState(getLayoutPayload());
 }

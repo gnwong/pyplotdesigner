@@ -28,12 +28,12 @@ export function getConstraintDescription(constraint) {
     if (add_before !== 0 && source !== 0) expr = `(${expr} + ${add_before})`;
     else if (add_before !== 0) expr = `${add_before}`;
     else if (source !== 0 && source != null) expr = `${source}`;
-    if (multiply !== 1) expr = `${expr} × ${multiply}`;
+    if (multiply !== 1) expr = `${multiply} × ${expr}`;
     if (add_after !== 0 && add_after != null) {
         if (expr === '') {
             expr = `${add_after}`;
         } else {
-            expr = `${expr} + ${add_after}`;
+            expr = `${add_after} + ${expr}`;
         }
     }
   

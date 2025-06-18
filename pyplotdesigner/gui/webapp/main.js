@@ -1,8 +1,9 @@
-import { canvas, setSelectedItem } from './shared.js';
+import { canvas, setSelectedItem, setScale, setFigureSize } from './shared.js';
 import { restorePanelSizes, toggleDarkMode, setupResizablePanels } from './ui.js';
-import { drawGrid } from './canvas.js';
+import { drawGrid, openLayoutModal } from './canvas.js';
 import { sendAdd, sendLayoutUpdate, getLayoutPayload, processReceivedPayload } from './api.js'
-import { renderLayout, updateElementFromProps, updateConstantFromProps } from './render.js'
+import { renderLayout, updateElementFromProps } from './render.js'
+import { updateConstantFromProps } from './constants.js';
 
 function shouldAutosave() {
     return localStorage.getItem('autosave-enabled') === 'true';
@@ -95,6 +96,7 @@ window.toggleDarkMode = toggleDarkMode;
 window.resetLayout = resetLayout;
 window.toggleAutosave = toggleAutosave;
 window.openImportExportModal = openImportExportModal;
+window.openLayoutModal = openLayoutModal;
 
 // expose functions for modifying layout and constraints
 window.toggleLock = toggleLock;
@@ -126,6 +128,8 @@ window.addEventListener('DOMContentLoaded', () => {
         const parsed = JSON.parse(saved);
         window.constraints = parsed.constraints || [];
         window.constants = parsed.constants || [];
+        setScale(parsed.viewport?.scale || 100);
+        setFigureSize(parsed.viewport?.figureWidth || 7, parsed.viewport?.figureHeight || 5);
         renderLayout(parsed.elements || []);
     } else {
         sendLayoutUpdate();

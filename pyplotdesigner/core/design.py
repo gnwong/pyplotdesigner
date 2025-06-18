@@ -201,6 +201,22 @@ class Design:
 
     def solve(self, verbose=False):
         """
+        Solve all registered constraints to compute final positions and
+        dimensions for all elements.
+
+        This method will apply constraints in a valid order based on their
+        dependencies, ensuring that all required inputs are resolved before
+        applying each constraint.
+
+        :arg verbose: (default=False) print order of applied constraints
+
+        :raises: RuntimeError - circular or unsatisfiable constraint detected
+        """
+        for _ in range(len(self.constraints)):
+            self._solve_once(verbose=verbose)
+
+    def _solve_once(self, verbose=False):
+        """
         Solve all registered constraints in a valid order based on
         their dependencies.
 

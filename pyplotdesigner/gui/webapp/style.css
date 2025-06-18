@@ -202,6 +202,8 @@ body.dark .resizer {
 }
 
 .left-panel h4 {
+    border-top: 1px solid #ccc;
+    padding-top: 8px;
     margin-bottom: 8px;
 }
 
@@ -438,4 +440,45 @@ canvas.grid-bg, canvas.arrows-bg {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+}
+
+.modal-overlay {
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.5);
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    z-index: 9999;
+}
+
+.modal-content {
+    background: white;
+    padding: 20px;
+    border-radius: 6px;
+    min-width: 300px;
+}
+
+.modal-input-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin: 10px 0;
+}
+
+.modal-input-row label {
+    flex: 1;
+}
+
+.modal-input-row input {
+    flex: 1;
+    margin-left: 10px;
+}
+
+.modal-button-row {
+    display: flex;
+    justify-content: flex-end;
+    gap: 10px;
+    margin-top: 20px;
 }
