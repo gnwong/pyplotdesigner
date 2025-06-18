@@ -1,7 +1,7 @@
 import { canvas, borderWidth, setScale, getScale, getFigureSize, setFigureSize } from './shared.js';
-import { getImageCoords } from './canvas.js';
 import { renderLayout, renderConstantsList, renderConstraintsList } from './render.js';
 import { constraintsEqual } from './constraints.js';
+import { getImageCoords } from './canvas.js';
 
 export function getLayoutPayload() {
     const elements = Array.from(canvas.children)

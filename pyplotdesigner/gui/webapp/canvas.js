@@ -1,5 +1,6 @@
 import { canvas, gridCanvas, getScale, setScale, offsetX, offsetY, setFigureSize, getFigureSize } from './shared.js';
 import { renderLayout } from './render.js';
+import { sendLayoutUpdate } from './api.js';
 
 export function openLayoutModal() {
 
@@ -58,6 +59,8 @@ export function openLayoutModal() {
             setScale(scale);
             setFigureSize(width, height);
             renderLayout();
+            drawGrid();
+            sendLayoutUpdate();
             document.body.removeChild(overlay);
         }
     };
@@ -74,7 +77,6 @@ export function openLayoutModal() {
     overlay.appendChild(modal);
     document.body.appendChild(overlay);
 }
-
 
 export function drawGrid() {
 
@@ -96,7 +98,7 @@ export function drawGrid() {
         ctx.lineTo(x, h);
         ctx.stroke();
     }
-    for (let y = offsetY; y < h; y += scale) {
+    for (let y = h - offsetY; y >= 0; y -= scale) {
         ctx.beginPath();
         ctx.moveTo(0, y);
         ctx.lineTo(w, y);
@@ -110,14 +112,14 @@ export function drawGrid() {
     ctx.stroke();
 
     ctx.beginPath();
-    ctx.moveTo(0, 1000 - offsetY);
-    ctx.lineTo(w, 1000 - offsetY);
+    ctx.moveTo(0, h - offsetY);
+    ctx.lineTo(w, h - offsetY);
     ctx.stroke();
 
     const figureDimensions = getFigureSize();
     const screenHeight = figureDimensions.height * scale;
     ctx.fillStyle = 'rgba(0, 0, 0, 0.05)';
-    ctx.fillRect(offsetX, 1000 - offsetY - screenHeight, figureDimensions.width * scale, screenHeight);
+    ctx.fillRect(offsetX, h - offsetY - screenHeight, figureDimensions.width * scale, screenHeight);
 }
 
 export function getImageCoords(x, y, width, height) {
