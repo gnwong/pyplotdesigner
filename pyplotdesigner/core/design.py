@@ -20,7 +20,10 @@ THE SOFTWARE.
 """
 
 
-from .models import Variable, Element, Constant
+import json
+import base64
+
+from .models import Variable, Element, Constant, SetValueConstraint
 
 
 class Design:
@@ -276,3 +279,84 @@ class Design:
             print("Constraints applied in order:")
             for c in applied:
                 print("  ", c)
+
+    def _get_attribute_or_value_from_json(self, val, default):
+        if isinstance(val, dict):
+            id = val.get('id', None)
+            attr = val.get('attr', None)
+            if id is None:
+                return float(attr)
+            if attr is None:
+                try:
+                    return self.get_constant_value(id)
+                except ValueError:
+                    return default
+            try:
+                return self.get_element_attribute(id, attr)
+            except ValueError:
+                return default
+        elif isinstance(val, (int, float)):
+            return float(val)
+        return default
+
+    def load(self, b64string):
+        """
+        Load a Design instance from a base64-encoded JSON string.
+
+        :arg b64string: base64-encoded JSON string representing the design
+        """
+        self.from_json_string(base64.b64decode(b64string).decode('utf-8'))
+
+    def from_json_string(self, json_str):
+        """
+        Load a Design instance from a JSON string.
+
+        :arg json_str: JSON-encoded design dictionary
+        """
+        data = json.loads(json_str)
+
+        elements = data.get("elements", [])
+        constraints = data.get("constraints", [])
+        constants = data.get("constants", [])
+        viewport = data.get("viewport", None)
+
+        if viewport is not None:
+            self.figure_width = viewport.get('figureWidth', 7)
+            self.figure_height = viewport.get('figureHeight', 5)
+
+        for el in elements:
+            e = Element(**el)
+            self.add_element(e)
+
+        for constant in constants:
+            id = constant.get('id')
+            value = constant.get('value')
+            if id is not None and value is not None:
+                self.add_constant(id=id, value=value)
+
+        for constraint in constraints:
+            target_def = constraint.get('target')
+            source_def = constraint.get('source')
+            multiply = self._get_attribute_or_value_from_json(constraint.get('multiply'), 1.)
+            add_before = self._get_attribute_or_value_from_json(constraint.get('add_before'), 0.)
+            add_after = self._get_attribute_or_value_from_json(constraint.get('add_after'), 0.)
+
+            if target_def is None:
+                continue
+
+            try:
+                target = self.get_element_attribute(target_def.get('id'), target_def.get('attr'))
+            except ValueError:
+                continue
+
+            source = None
+            if source_def is not None:
+                try:
+                    source = self.get_element_attribute(source_def.get('id'), source_def.get('attr'))
+                except ValueError:
+                    source = None
+
+            constraint_obj = SetValueConstraint(
+                target, source, multiply=multiply, add_before=add_before, add_after=add_after
+            )
+            self.add_constraint(constraint_obj)
