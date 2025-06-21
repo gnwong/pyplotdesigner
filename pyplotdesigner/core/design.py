@@ -36,139 +36,56 @@ class Design:
     resolved.
     """
 
-    def __init__(self):
+    def __init__(self, figure_width=7, figure_height=5):
         """
         Initialize a new constraint-solving engine with empty elements and constraints.
+
+        :arg figure_width: (default=7) width of the figure in inches
+        :arg figure_height: (default=5) height of the figure in inches
         """
         self.elements = []
         self.constraints = []
         self.constants = []
+        self.figure_width = figure_width
+        self.figure_height = figure_height
+
+    # set and get general design properties
 
     def print_info(self):
         """
         Print all registered elements and constraints for debugging or inspection.
         """
+        print('Figure dimensions:', self.figure_width, 'x', self.figure_height)
+        for constant in self.constants:
+            print(constant)
         for element in self.elements:
             print(element)
         for constraint in self.constraints:
             print(constraint)
 
-    def add_constant(self, id=None, value=0.0):
+    def set_viewport(self, figure_width=None, figure_height=None):
         """
-        Add a constant value to the design, which can be used in constraints.
+        Set figure dimensions.
 
-        :arg id: unique identifier for the constant (default=None, auto-generated)
-        :arg value: numeric value of the constant (default=0.0)
+        :arg figure_width: (default=None) width of the figure in inches
+        :arg figure_height: (default=None)height of the figure in inches
         """
-        if id is None:
-            id = self.get_unique_id(prefix="constant")
-        constant = Constant(id=id, value=value)
-        self.constants.append(constant)
+        if figure_width is not None:
+            self.figure_width = figure_width
+        if figure_height is not None:
+            self.figure_height = figure_height
 
-    def update_constant(self, id, constant):
+    def get_figure_width(self):
         """
-        Safely update constant value identified by its current (-> previous) id.
-
-        :arg id: unique identifier of the constant to update
-        :arg constant: new Constant object with updated value
+        Get the width of the figure in inches.
         """
-        if id is None or constant is None:
-            return
-        new_id = constant.get('id', None)
-        new_value = constant.get('value', None)
-        if new_id is None or new_value is None:
-            return
+        return self.figure_width
 
-        existing_constant = next((c for c in self.constants if c.id == id), None)
-        if existing_constant is None:
-            return
-
-        # check if the new constant id already exists
-        if any(c.id == new_id for c in self.constants if c.id != id):
-            print(f"Constant with id '{new_id}' already exists, cannot update.")
-            return
-
-        # update the existing constant
-        existing_constant.id = new_id
-        existing_constant.value = new_value
-
-        # TODO, check all constraints for references to this constant and update appropriately
-
-    def add_empty_element(self, element_type="axis", id=None, text=None):
+    def get_figure_height(self):
         """
-        Add a new empty layout element of the specified type with default
-        position and size.
-
-        :arg element_type: type of the element to create (default="axis")
-        :arg id: unique identifier for the element (default=None, auto-generated)
+        Get the height of the figure in inches.
         """
-        if id is None:
-            id = self.get_unique_id(prefix=f"{element_type}-")
-        if text is None:
-            text = id
-        x = 0.1 * len(self.elements)
-        y = 0.1 * len(self.elements)
-        element = Element(id=id, type=element_type, x=x, y=y, width=1, height=1, text=text)
-        self.add_element(element)
-
-    def get_element(self, element_id):
-        """
-        Retrieve a layout element by its unique ID.
-
-        :arg element_id: ID of the element to retrieve
-        :return: element object if found or None
-        """
-        for element in self.elements:
-            if element.id == element_id:
-                return element
-        return None
-
-    def remove_element_by_id(self, element_id):
-        """
-        Safely remove an element from the design, including constraints
-        that reference it.
-
-        :arg element_id: ID of the element to remove
-        """
-        element = self.get_element(element_id)
-        if element is None:
-            return
-
-        for constraint in self.constraints:
-            if constraint.includes_element(element):
-                self.constraints.remove(constraint)
-
-        self.elements.remove(element)
-
-    def get_constant_value(self, constant):
-        """
-        Get the value of a constant by its ID.
-
-        :arg constant: ID of the constant to retrieve
-        """
-        if constant is None:
-            return None
-        if isinstance(constant, Constant):
-            return constant.value
-        const = next((c for c in self.constants if c.id == constant), None)
-        if const is None:
-            raise ValueError(f"Constant with ID '{constant}' not found")
-        return const.value
-
-    def get_element_attribute(self, element_id, attr):
-        """
-        Get the value of a specific attribute for an element by its ID.
-
-        :arg element_id: ID of the element to retrieve
-        :arg attr: attribute name (e.g., 'x', 'y', 'width', 'height')
-        :return: reference value of the specified attribute
-        """
-        if element_id is None or attr is None:
-            return None
-        element = self.get_element(element_id)
-        if element is None:
-            raise ValueError(f"Element with ID '{element_id}' not found")
-        return getattr(element, attr)
+        return self.figure_height
 
     def get_unique_id(self, prefix="widget-"):
         """
@@ -184,23 +101,6 @@ class Design:
                not any(c.id == unique_id for c in self.constants):
                 return unique_id
         raise RuntimeError("Failed to generate unique ID after 10000 attempts")
-
-    def add_element(self, element):
-        """
-        Register a new layout element in the design.
-
-        :arg element: the layout element to track
-        """
-        self.elements.append(element)
-
-    def add_constraint(self, constraint):
-        """
-        Register a new constraint that governs relationships between
-        element attributes.
-
-        :arg constraint: constraint with .target and .apply()
-        """
-        self.constraints.append(constraint)
 
     def solve(self, verbose=False):
         """
@@ -280,6 +180,8 @@ class Design:
             for c in applied:
                 print("  ", c)
 
+    # input/output utilities
+
     def _get_attribute_or_value_from_json(self, val, default):
         if isinstance(val, dict):
             id = val.get('id', None)
@@ -337,26 +239,183 @@ class Design:
         for constraint in constraints:
             target_def = constraint.get('target')
             source_def = constraint.get('source')
-            multiply = self._get_attribute_or_value_from_json(constraint.get('multiply'), 1.)
-            add_before = self._get_attribute_or_value_from_json(constraint.get('add_before'), 0.)
-            add_after = self._get_attribute_or_value_from_json(constraint.get('add_after'), 0.)
+            multiply = self._get_attribute_or_value_from_json(constraint.get('multiply'), 1)
+            add_before = self._get_attribute_or_value_from_json(constraint.get('add_before'), 0)
+            add_after = self._get_attribute_or_value_from_json(constraint.get('add_after'), 0)
 
             if target_def is None:
                 continue
 
             try:
-                target = self.get_element_attribute(target_def.get('id'), target_def.get('attr'))
+                target = self.get_element_attribute(target_def.get('id'),
+                                                    target_def.get('attr'))
             except ValueError:
                 continue
 
             source = None
             if source_def is not None:
                 try:
-                    source = self.get_element_attribute(source_def.get('id'), source_def.get('attr'))
+                    source = self.get_element_attribute(source_def.get('id'),
+                                                        source_def.get('attr'))
                 except ValueError:
                     source = None
 
             constraint_obj = SetValueConstraint(
-                target, source, multiply=multiply, add_before=add_before, add_after=add_after
+                target, source,
+                multiply=multiply, add_before=add_before, add_after=add_after
             )
             self.add_constraint(constraint_obj)
+
+    # constant utilities
+
+    def add_constant(self, id=None, value=0.0):
+        """
+        Add a constant value to the design, which can be used in constraints.
+
+        :arg id: unique identifier for the constant (default=None, auto-generated)
+        :arg value: numeric value of the constant (default=0.0)
+        """
+        if id is None:
+            id = self.get_unique_id(prefix="constant")
+        constant = Constant(id=id, value=value)
+        self.constants.append(constant)
+
+    def get_constant(self, id):
+        """
+        Return the Constant object identified by its unique ID.
+
+        :arg id: unique identifier of the constant to retrieve
+        :return: Constant object or None if not found
+        """
+        if id is None:
+            return None
+        for constant in self.constants:
+            if constant.id == id:
+                return constant
+        return None
+
+    def update_constant(self, id, constant):
+        """
+        Safely update constant value identified by its current (-> previous) id.
+
+        :arg id: unique identifier of the constant to update
+        :arg constant: new Constant object with updated value
+        """
+        if id is None or constant is None:
+            return
+        new_id = constant.get('id', None)
+        new_value = constant.get('value', None)
+        if new_id is None or new_value is None:
+            return
+
+        existing_constant = next((c for c in self.constants if c.id == id), None)
+        if existing_constant is None:
+            return
+
+        # check if the new constant id already exists
+        if any(c.id == new_id for c in self.constants if c.id != id):
+            print(f"Constant with id '{new_id}' already exists, cannot update.")
+            return
+
+        # update the existing constant
+        existing_constant.id = new_id
+        existing_constant.value = new_value
+
+        # TODO, check all constraints for references to this constant and update appropriately
+
+    def get_constant_value(self, constant):
+        """
+        Get the value of a constant by its ID.
+
+        :arg constant: ID of the constant to retrieve
+        """
+        if constant is None:
+            return None
+        if isinstance(constant, Constant):
+            return constant.value
+        const = next((c for c in self.constants if c.id == constant), None)
+        if const is None:
+            raise ValueError(f"Constant with ID '{constant}' not found")
+        return const.value
+
+    # element utilities
+
+    def add_empty_element(self, element_type="axis", id=None, text=None):
+        """
+        Add a new empty layout element of the specified type with default
+        position and size.
+
+        :arg element_type: type of the element to create (default="axis")
+        :arg id: unique identifier for the element (default=None, auto-generated)
+        """
+        if id is None:
+            id = self.get_unique_id(prefix=f"{element_type}-")
+        if text is None:
+            text = id
+        x = 0.1 * len(self.elements)
+        y = 0.1 * len(self.elements)
+        element = Element(id=id, type=element_type, x=x, y=y, width=1, height=1, text=text)
+        self.add_element(element)
+
+    def get_element(self, element_id):
+        """
+        Retrieve a layout element by its unique ID.
+
+        :arg element_id: ID of the element to retrieve
+        :return: element object if found or None
+        """
+        for element in self.elements:
+            if element.id == element_id:
+                return element
+        return None
+
+    def remove_element_by_id(self, element_id):
+        """
+        Safely remove an element from the design, including constraints
+        that reference it.
+
+        :arg element_id: ID of the element to remove
+        """
+        element = self.get_element(element_id)
+        if element is None:
+            return
+
+        for constraint in self.constraints:
+            if constraint.includes_element(element):
+                self.constraints.remove(constraint)
+
+        self.elements.remove(element)
+
+    def get_element_attribute(self, element_id, attr):
+        """
+        Get the value of a specific attribute for an element by its ID.
+
+        :arg element_id: ID of the element to retrieve
+        :arg attr: attribute name (e.g., 'x', 'y', 'width', 'height')
+        :return: reference value of the specified attribute
+        """
+        if element_id is None or attr is None:
+            return None
+        element = self.get_element(element_id)
+        if element is None:
+            raise ValueError(f"Element with ID '{element_id}' not found")
+        return getattr(element, attr)
+
+    # constraint utilities
+
+    def add_element(self, element):
+        """
+        Register a new layout element in the design.
+
+        :arg element: the layout element to track
+        """
+        self.elements.append(element)
+
+    def add_constraint(self, constraint):
+        """
+        Register a new constraint that governs relationships between
+        element attributes.
+
+        :arg constraint: constraint with .target and .apply()
+        """
+        self.constraints.append(constraint)
