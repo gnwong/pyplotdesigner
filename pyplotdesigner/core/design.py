@@ -421,3 +421,22 @@ class Design:
         :arg constraint: constraint with .target and .apply()
         """
         self.constraints.append(constraint)
+
+    def get_constraint(self, target_element, target_attribute):
+        """
+        Get the constraint that sets target_element.target_attribute if
+        it exists.
+
+        :arg target_element: element whose attribute is being set
+        :arg target_attribute: name of the attribute being set
+        :return: the constraint if found, otherwise None
+        """
+        if target_element is None or target_attribute is None:
+            return None
+        if not isinstance(target_element, Element):
+            target_element = self.get_element(target_element)
+        for constraint in self.constraints:
+            if constraint.target.owner == target_element and \
+               constraint.target.attr[1:] == target_attribute:
+                return constraint
+        return None

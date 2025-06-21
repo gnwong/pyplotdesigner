@@ -165,6 +165,17 @@ class SetValueConstraint:
         self.multiply = multiply
         self.add_before = add_before
         self.add_after = add_after
+        self._multiply = multiply
+
+    def set_attribute(self, attribute, value):
+        if attribute == 'source':
+            self.source = value
+        elif attribute == 'multiply':
+            self.multiply = value
+        elif attribute == 'add_before':
+            self.add_before = value
+        elif attribute == 'add_after':
+            self.add_after = value
 
     def _resolve(self, value_or_var):
         return value_or_var.get() if hasattr(value_or_var, 'get') else value_or_var
