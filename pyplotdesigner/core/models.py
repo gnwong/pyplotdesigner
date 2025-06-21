@@ -106,7 +106,7 @@ class Element:
         self.height = Variable(self, "_height")
 
         # add aliases
-        self.top = self.y
+        self.bottom = self.y
         self.left = self.x
 
         # add computed variables
@@ -117,9 +117,9 @@ class Element:
             set_fn=lambda val: setattr(self, "_x", val - self._width)
         )
 
-        self.bottom = ComputedVariable(
+        self.top = ComputedVariable(
             owner=self,
-            attr="_bottom",
+            attr="_top",
             get_fn=lambda: self._y + self._height,
             set_fn=lambda val: setattr(self, "_y", val - self._height)
         )
