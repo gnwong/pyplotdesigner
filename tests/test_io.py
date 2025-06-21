@@ -92,6 +92,8 @@ def test_update():
 
 def test_delete():
 
+    # no test for deleting constraints, since nothing explicitly depends on them
+
     # test delete element when there are no constraints that rely on it
     request = base_request_data.copy()
     request['action'] = "delete"
@@ -122,7 +124,6 @@ def test_delete():
     assert len(constraints) == 0
 
     # TODO: test delete constant
-    # TODO: test delete constraint
 
 
 def test_error_messages():
@@ -144,11 +145,24 @@ def test_error_messages():
 
     # given circular dependency
     request = base_request_data.copy()
-    # TODO
-    #request = base_request_data.copy()
-    #request['action'] = "update_constant"
-    #request['id'] = "y_offset"
-    #request['constant'] = {'type': "constant", 'id': "y_offset", 'value': 0.1}
+    constraint_1 = {
+        'target': {'id': 'axis-1', 'attr': 'x'},
+        'source': {'id': 'axis-0', 'attr': 'y'},
+        'multiply': {'id': None, 'attr': 1},
+        'add_before': {'id': None, 'attr': 0},
+        'add_after': {'id': None, 'attr': 0}
+    }
+    constraint_2 = {
+        'target': {'id': 'axis-0', 'attr': 'y'},
+        'source': {'id': 'axis-1', 'attr': 'x'},
+        'multiply': {'id': None, 'attr': 1},
+        'add_before': {'id': None, 'attr': 0},
+        'add_after': {'id': None, 'attr': 0}
+    }
+    request['constraints'] = [constraint_1, constraint_2]
+    response_data = handle_update_layout(request)
+    layout_data = json.loads(response_data.body.decode('utf-8'))
+    assert 'error' in layout_data
 
 
 def test_handle_layout():
