@@ -380,9 +380,11 @@ class Design:
         if element is None:
             return
 
+        new_constraints = []
         for constraint in self.constraints:
-            if constraint.includes_element(element):
-                self.constraints.remove(constraint)
+            if not constraint.includes_element(element):
+                new_constraints.append(constraint)
+        self.constraints = new_constraints
 
         self.elements.remove(element)
 

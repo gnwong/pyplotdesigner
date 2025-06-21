@@ -76,6 +76,7 @@ def handle_update_layout(data, verbose=False):
         design.add_constraint(new_constraint)
 
     action = data.get("action", None)
+    action_error_message = None
 
     if action == "add":
         new_type = data.get("new_type", None)
@@ -84,7 +85,7 @@ def handle_update_layout(data, verbose=False):
         elif new_type == "constant":
             design.add_constant()
         else:
-            print('action:add', new_type, 'not recognized')
+            action_error_message = f'action:add {new_type} not recognized'
     elif action == "delete":
         element_id = data.get("element_id", None)
         design.remove_element_by_id(element_id)
@@ -93,9 +94,7 @@ def handle_update_layout(data, verbose=False):
         constant_data = data.get("constant", None)
         design.update_constant(constant_id, constant_data)
     elif action is not None:
-        print('action not recognized:', action)
-        for key in data:
-            print(key, data[key])
+        action_error_message = f'action {action} not recognized'
 
     if verbose:
         print('Design info:')
@@ -115,7 +114,11 @@ def handle_update_layout(data, verbose=False):
         "constants": [c.to_dict() for c in design.constants]
     }
 
+    if error_message or action_error_message:
+        response['error'] = []
     if error_message:
-        response['error'] = error_message
+        response['error'].append(error_message)
+    if action_error_message:
+        response['error'].append(action_error_message)
 
     return JSONResponse(content=response)
