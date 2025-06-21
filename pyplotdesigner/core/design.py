@@ -319,7 +319,7 @@ class Design:
 
         # update the existing constant
         existing_constant.id = new_id
-        existing_constant.value = new_value
+        existing_constant.value.set(new_value)
 
         # TODO, check all constraints for references to this constant and update appropriately
 

@@ -70,7 +70,7 @@ class ComputedVariable(Variable):
         return {"id": self.owner.id, "attr": self.attr[1:]}
 
     def __repr__(self):
-        return self.label or super().__repr__()
+        return f"{self.owner.id}.{self.attr}"
 
 
 class Constant:
