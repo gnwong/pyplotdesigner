@@ -227,8 +227,7 @@ class Design:
             self.figure_height = viewport.get('figureHeight', 5)
 
         for el in elements:
-            e = Element(**el)
-            self.add_element(e)
+            self.add_element(**el)
 
         for constant in constants:
             id = constant.get('id')
@@ -354,8 +353,7 @@ class Design:
             text = id
         x = 0.1 * len(self.elements)
         y = 0.1 * len(self.elements)
-        element = Element(id=id, type=element_type, x=x, y=y, width=1, height=1, text=text)
-        self.add_element(element)
+        self.add_element(id=id, type=element_type, x=x, y=y, width=1, height=1, text=text)
 
     def get_element(self, element_id):
         """
@@ -405,13 +403,14 @@ class Design:
 
     # constraint utilities
 
-    def add_element(self, element):
+    def add_element(self, id=None, type=None, x=0.0, y=0.0, width=1.0, height=1.0, text=None):
         """
         Register a new layout element in the design.
 
         :arg element: the layout element to track
         """
-        self.elements.append(element)
+        el = Element(id=id, type=type, x=x, y=y, width=width, height=height, text=text)
+        self.elements.append(el)
 
     def add_constraint(self, constraint):
         """

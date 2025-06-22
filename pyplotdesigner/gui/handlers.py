@@ -34,8 +34,7 @@ def handle_update_layout(data, verbose=False):
     constants = data.get("constants", [])
 
     for el in elements:
-        e = Element(**el)
-        design.add_element(e)
+        design.add_element(**el)
 
     for constant in constants:
         id = constant.get('id', None)
