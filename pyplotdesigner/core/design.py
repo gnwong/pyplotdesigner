@@ -20,6 +20,8 @@ THE SOFTWARE.
 """
 
 
+import keyword
+import re
 import json
 import base64
 
@@ -101,6 +103,44 @@ class Design:
                not any(c.id == unique_id for c in self.constants):
                 return unique_id
         raise RuntimeError("Failed to generate unique ID after 10000 attempts")
+
+    def is_equivalent_to(self, other):
+        """
+        Check if this design is equivalent to another design instance. Designs
+        are said to be equivalent when they have the same dimension, elements,
+        constraints, and constants, regardless of their order.
+
+        :arg other: another Design instance to compare against
+        :return: True if equivalent, False otherwise
+        """
+
+        if not isinstance(other, self.__class__):
+            return False
+
+        if self.figure_width != other.figure_width or \
+                self.figure_height != other.figure_height:
+            return False
+
+        if len(self.elements) != len(other.elements):
+            return False
+        if len(self.constraints) != len(other.constraints):
+            return False
+        if len(self.constants) != len(other.constants):
+            return False
+
+        for el in self.elements:
+            if el not in other.elements:
+                return False
+
+        for constant in self.constants:
+            if constant not in other.constants:
+                return False
+
+        for constraint in self.constraints:
+            if constraint not in other.constraints:
+                return False
+
+        return True
 
     def solve(self, verbose=False):
         """
@@ -201,6 +241,109 @@ class Design:
             return float(val)
         return default
 
+    def get_python_commands(self):
+        """
+        Return a list of python commands that can be used to recreate the
+        current design.
+
+        :return: list of python commands as strings
+        """
+
+        def __is_valid_variable_name(name):
+            return name.isidentifier() and not keyword.iskeyword(name)
+
+        def __make_valid_variable_name(name, existing_names, suffix='_var'):
+            name = re.sub(r'\W|^(?=\d)', '_', name)
+            if keyword.iskeyword(name):
+                name += suffix
+            if not name.strip('_'):
+                name = suffix
+            while name in existing_names:
+                name += suffix
+            return name
+
+        def __get_name_for_constraint(item, id_name_map):
+            if item is None:
+                return None
+            if isinstance(item, Variable):
+                owner = item.owner
+                if owner is not None and owner in id_name_map:
+                    return id_name_map[owner] + '.' + item.attr[1:]
+            return item
+
+        # construct map of unique names
+        id_name_map = dict()
+        elements_to_reresolve = []
+        constants_to_reresolve = []
+        for element in self.elements:
+            el_name = element.type + "_" + element.text
+            if __is_valid_variable_name(el_name) and \
+                    el_name not in id_name_map.values():
+                id_name_map[element] = el_name
+            else:
+                elements_to_reresolve.append(element)
+        for constant in self.constants:
+            c_name = f"constant_{constant.id}"
+            if __is_valid_variable_name(c_name) and \
+                    c_name not in id_name_map.values():
+                id_name_map[constant] = c_name
+            else:
+                constants_to_reresolve.append(constant)
+        for element in elements_to_reresolve:
+            el_name = element.type + "_" + element.text
+            el_name = __make_valid_variable_name(el_name, id_name_map.values())
+            id_name_map[element] = el_name
+        for constant in constants_to_reresolve:
+            c_name = f"constant_{constant.id}"
+            c_name = __make_valid_variable_name(c_name, id_name_map.values())
+            id_name_map[constant] = c_name
+
+        # start making commands list
+        python_commands = ["design = Design()", ""]
+
+        width = self.get_figure_width()
+        height = self.get_figure_height()
+        figdim = f"design.set_viewport(figure_width={width}, figure_height={height})"
+        python_commands += [figdim, ""]
+
+        for element in self.elements:
+            name = id_name_map[element]
+            el_defn = f"{name} = design.add_element"
+            el_defn += f"(id='{name}', type='{element.type}', "
+            el_defn += f"x={element.x.get()}, y={element.y.get()}, "
+            el_defn += f"width={element.width.get()}, height={element.height.get()}, "
+            el_defn += f"text='{element.text}')"
+            python_commands.append(el_defn)
+        python_commands += [""]
+
+        for constant in self.constants:
+            name = id_name_map[constant]
+            const_defn = f"{name} = design.add_constant"
+            const_defn += f"(id='{constant.id}', value={constant.value.get()})"
+            python_commands.append(const_defn)
+        python_commands += [""]
+
+        for constraint in self.constraints:
+            target = __get_name_for_constraint(constraint.target, id_name_map)
+            source = __get_name_for_constraint(constraint.source, id_name_map)
+            multiply = __get_name_for_constraint(constraint.multiply, id_name_map)
+            add_before = __get_name_for_constraint(constraint.add_before, id_name_map)
+            add_after = __get_name_for_constraint(constraint.add_after, id_name_map)
+            constraint_defn = "design.add_constraint("
+            constraint_defn += f"target={target}, "
+            if source is not None:
+                constraint_defn += f"source={source}, "
+            if multiply is not None and multiply != 1.:
+                constraint_defn += f"multiply={multiply}, "
+            if add_before is not None and add_before != 0.:
+                constraint_defn += f"add_before={add_before}, "
+            if add_after is not None and add_after != 0.:
+                constraint_defn += f"add_after={add_after}, "
+            constraint_defn = constraint_defn.rstrip(', ') + ")"
+            python_commands.append(constraint_defn)
+
+        return python_commands
+
     def load(self, b64string):
         """
         Load a Design instance from a base64-encoded JSON string.
@@ -259,11 +402,8 @@ class Design:
                 except ValueError:
                     source = None
 
-            constraint_obj = SetValueConstraint(
-                target, source,
-                multiply=multiply, add_before=add_before, add_after=add_after
-            )
-            self.add_constraint(constraint_obj)
+            self.add_constraint(target=target, source=source, multiply=multiply,
+                                add_before=add_before, add_after=add_after)
 
     def get_json_string(self):
         """
@@ -455,14 +595,27 @@ class Design:
         self.elements.append(el)
         return el
 
-    def add_constraint(self, constraint):
+    def add_constraint(self, target=None, source=None, multiply=1.,
+                       add_before=0., add_after=0.):
         """
         Register a new constraint that governs relationships between
         element attributes.
 
-        :arg constraint: constraint with .target and .apply()
+        target <- add_after + multiply * (source + add_before)
+
+        :arg target: the target element attribute to set (e.g., x, y, width, height)
+        :arg source: the source element attribute to use as input (optional)
+        :arg multiply: (default=1.0) multiplier for the source and add_before values
+        :arg add_before: (default=0.0) value to add before the source value
+        :arg add_after: (default=0.0) value to add after the source value
         """
-        self.constraints.append(constraint)
+        constraint = SetValueConstraint(
+            target=target, source=source,
+            multiply=multiply, add_before=add_before, add_after=add_after
+        )
+        if constraint is not None:
+            self.constraints.append(constraint)
+        return constraint
 
     def get_constraint(self, target_element, target_attribute):
         """

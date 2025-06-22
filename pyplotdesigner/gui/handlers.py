@@ -68,11 +68,8 @@ def handle_update_layout(data, verbose=False):
         add_after = _get_attribute_or_value(add_after, 0.)
 
         # get new constraint
-        new_constraint = SetValueConstraint(
-            target, source, multiply=multiply, add_before=add_before, add_after=add_after
-        )
-
-        design.add_constraint(new_constraint)
+        design.add_constraint(target=target, source=source, multiply=multiply,
+                              add_before=add_before, add_after=add_after)
 
     action = data.get("action", None)
     action_error_message = None

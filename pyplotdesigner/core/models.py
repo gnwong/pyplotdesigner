@@ -46,7 +46,7 @@ class Variable:
 
     def __eq__(self, other):
         return isinstance(other, Variable) and \
-            self.owner is other.owner and \
+            self.owner == other.owner and \
             self.attr == other.attr
 
     def __repr__(self):
@@ -81,6 +81,15 @@ class Constant:
 
     def __repr__(self):
         return f"Constant(id={self.id}, value={self._value})"
+
+    def __eq__(self, other):
+        if not isinstance(other, Constant):
+            return False
+        return self.id == other.id and \
+            self._value == other._value
+
+    def __hash__(self):
+        return hash((self.id, self._value))
 
     def to_dict(self):
         return {
@@ -137,6 +146,20 @@ class Element:
             get_fn=lambda: self._y + self._height / 2,
             set_fn=lambda val: setattr(self, "_y", val - self._height / 2)
         )
+
+    def __eq__(self, other):
+        if not isinstance(other, Element):
+            return False
+        return self._x == other._x and \
+            self._y == other._y and \
+            self._width == other._width and \
+            self._height == other._height and \
+            self.type == other.type and \
+            self.text == other.text
+
+    def __hash__(self):
+        return hash((self._x, self._y, self._width,
+                     self._height, self.type, self.text))
 
     def get_valid_attributes(self):
         return ['x', 'y', 'width', 'height',
@@ -200,8 +223,27 @@ class SetValueConstraint:
         self.target.set(result)
 
     def __repr__(self):
-        return f"Constraint({self.target} = ({self.source} + " \
-            f"{self.add_before}) * {self.multiply} + {self.add_after})"
+        def is_not_none_or(value, test):
+            if value is not None and value != test:
+                return True
+            return False
+        expr = ''
+        if is_not_none_or(self.add_before, 0) and is_not_none_or(self.source, 0):
+            expr = f"({self.source} + {self.add_before})"
+        elif is_not_none_or(self.add_before, 0):
+            expr = f"{self.add_before}"
+        elif is_not_none_or(self.source, 0) and self.source is not None:
+            expr = f"{self.source}"
+        if is_not_none_or(self.multiply, 1) and expr:
+            expr = f"{self.multiply} * {expr}"
+        elif is_not_none_or(self.multiply, 1):
+            expr = f"{self.multiply} * ({self.source})"
+        if is_not_none_or(self.add_after, 0):
+            if expr == '':
+                expr = f"{self.add_after}"
+            else:
+                expr = f"{self.add_after} + {expr}"
+        return f"Constraint({self.target} = {expr or 0})"
 
     def _get_dict_for_attribute(self, attribute):
         d = dict(id=None, attr=None)
@@ -210,6 +252,21 @@ class SetValueConstraint:
         elif isinstance(attribute, (int, float)):
             d['attr'] = attribute
         return d
+
+    def __eq__(self, other):
+        if not isinstance(other, SetValueConstraint):
+            return False
+        if self.target != other.target or \
+            self.source != other.source or \
+            self.multiply != other.multiply or \
+            self.add_before != other.add_before or \
+            self.add_after != other.add_after:
+            return False
+        return True
+
+    def __hash__(self):
+        return hash((self.target, self.source, self.multiply,
+                     self.add_before, self.add_after))
 
     def to_dict(self):
         d = {}
