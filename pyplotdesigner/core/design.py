@@ -265,6 +265,45 @@ class Design:
             )
             self.add_constraint(constraint_obj)
 
+    def get_json_string(self):
+        """
+        Convert the current design to a JSON string representation.
+
+        :return: JSON string representing the design layout
+        """
+
+        elements = []
+        constraints = []
+        constants = []
+
+        for el in self.elements:
+            elements.append(el.to_dict())
+        for constraint in self.constraints:
+            constraints.append(constraint.to_dict())
+        for constant in self.constants:
+            constants.append(constant.to_dict())
+
+        payload = dict(
+            elements=elements,
+            constraints=constraints,
+            constants=constants,
+            viewport=dict(
+                figureWidth=self.get_figure_width(),
+                figureHeight=self.get_figure_height()
+            )
+        )
+
+        return json.dumps(payload, indent=None, separators=(',', ':'))
+
+    def get_b64_string(self):
+        """
+        Get the base64-encoded JSON string representation of the design.
+
+        :return: base64-encoded JSON string
+        """
+        json_str = self.get_json_string()
+        return base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
+
     # constant utilities
 
     def add_constant(self, id=None, value=0.0):
