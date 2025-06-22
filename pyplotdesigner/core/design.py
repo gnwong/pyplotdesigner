@@ -278,6 +278,7 @@ class Design:
             id = self.get_unique_id(prefix="constant")
         constant = Constant(id=id, value=value)
         self.constants.append(constant)
+        return constant
 
     def get_constant(self, id):
         """
@@ -409,8 +410,11 @@ class Design:
 
         :arg element: the layout element to track
         """
+        if text is None and type == 'axis':
+            text = id
         el = Element(id=id, type=type, x=x, y=y, width=width, height=height, text=text)
         self.elements.append(el)
+        return el
 
     def add_constraint(self, constraint):
         """

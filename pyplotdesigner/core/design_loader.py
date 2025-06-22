@@ -24,7 +24,7 @@ import matplotlib.pyplot as plt
 from pyplotdesigner.core.design import Design
 
 
-def load_figure_from_b64(json_b64, **kwargs):
+def make_figure_from_b64(json_b64, **kwargs):
     """
     Decode a base64-encoded JSON string representing a design layout,
     build the Design object, and return a matplotlib Figure and Axes.
@@ -36,6 +36,20 @@ def load_figure_from_b64(json_b64, **kwargs):
 
     design = Design()
     design.load(json_b64)
+    design.solve()
+
+    return make_figure_from_design(design, **kwargs)
+
+
+def make_figure_from_design(design, **kwargs):
+    """
+    Create a matplotlib Figure and Axes from a Design object.
+
+    :arg design: Design object containing layout information
+    :arg kwargs: additional keyword arguments for matplotlib figure creation
+    :return: (Figure, Dict[str, Axes])
+    """
+
     design.solve()
 
     width = design.figure_width
