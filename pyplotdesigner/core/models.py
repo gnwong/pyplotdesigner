@@ -20,6 +20,9 @@ THE SOFTWARE.
 """
 
 
+import numpy as np
+
+
 class Variable:
     def __init__(self, owner, attr):
         self.owner = owner
@@ -150,10 +153,10 @@ class Element:
     def __eq__(self, other):
         if not isinstance(other, Element):
             return False
-        return self._x == other._x and \
-            self._y == other._y and \
-            self._width == other._width and \
-            self._height == other._height and \
+        return np.allclose(self._x, other._x) and \
+            np.allclose(self._y, other._y) and \
+            np.allclose(self._width, other._width) and \
+            np.allclose(self._height, other._height) and \
             self.type == other.type and \
             self.text == other.text
 

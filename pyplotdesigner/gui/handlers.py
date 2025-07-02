@@ -14,6 +14,8 @@ def handle_update_layout(data, verbose=False):
             id = val.get('id', None)
             attr = val.get('attr', None)
             if id is None:
+                if attr is None:
+                    return None
                 return float(attr)
             if attr is None:
                 try:
@@ -56,12 +58,8 @@ def handle_update_layout(data, verbose=False):
         target = design.get_element_attribute(target.get('id', None),
                                               target.get('attr', None))
 
-        # source is either an element attribute or None
-        if source is not None:
-            source = design.get_element_attribute(source.get('id', None),
-                                                  source.get('attr', None))
-
         # other fields could be element attributes, numeric values, constants, or None
+        source = _get_attribute_or_value(source, None)
         multiply = _get_attribute_or_value(multiply, 1.)
         add_before = _get_attribute_or_value(add_before, 0.)
         add_after = _get_attribute_or_value(add_after, 0.)

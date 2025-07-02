@@ -104,40 +104,62 @@ class Design:
                 return unique_id
         raise RuntimeError("Failed to generate unique ID after 10000 attempts")
 
-    def is_equivalent_to(self, other):
+    def is_equivalent_to(self, other, verbose=False):
         """
         Check if this design is equivalent to another design instance. Designs
         are said to be equivalent when they have the same dimension, elements,
         constraints, and constants, regardless of their order.
 
         :arg other: another Design instance to compare against
+        :arg verbose: (default=False) whether to print on differences
         :return: True if equivalent, False otherwise
         """
 
         if not isinstance(other, self.__class__):
+            if verbose:
+                print(other, 'is not instance of', self.__class__)
             return False
 
         if self.figure_width != other.figure_width or \
                 self.figure_height != other.figure_height:
+            if verbose:
+                print('Figure dimensions differ:',
+                      self.figure_width, 'x', self.figure_height,
+                      'vs', other.figure_width, 'x', other.figure_height)
             return False
 
         if len(self.elements) != len(other.elements):
+            if verbose:
+                print('Number of elements differ:',
+                      len(self.elements), 'vs', len(other.elements))
             return False
         if len(self.constraints) != len(other.constraints):
+            if verbose:
+                print('Number of constraints differ:',
+                      len(self.constraints), 'vs', len(other.constraints))
             return False
         if len(self.constants) != len(other.constants):
+            if verbose:
+                print('Number of constants differ:',
+                      len(self.constants), 'vs', len(other.constants))
             return False
 
         for el in self.elements:
             if el not in other.elements:
+                if verbose:
+                    print('Element', el.id, 'not found in other design')
                 return False
 
         for constant in self.constants:
             if constant not in other.constants:
+                if verbose:
+                    print('Constant', constant.id, 'not found in other design')
                 return False
 
         for constraint in self.constraints:
             if constraint not in other.constraints:
+                if verbose:
+                    print('Constraint', constraint, 'not found in other design')
                 return False
 
         return True
