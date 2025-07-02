@@ -6,9 +6,10 @@ import { renderLayout, updateElementFromProps } from './render.js'
 import { updateConstantFromProps } from './constants.js';
 
 function shouldAutosave() {
-    return localStorage.getItem('autosave-enabled') === 'true';
+    const autosave = localStorage.getItem('autosave-enabled');
+    return autosave === 'true' || autosave === null;
 }
-  
+
 function updateAutosaveButtonUI() {
     const btn = document.getElementById('autosave-toggle');
     const enabled = shouldAutosave();
@@ -116,7 +117,7 @@ window.addEventListener('DOMContentLoaded', () => {
     if (localStorage.getItem('darkMode') === 'on') {
         document.body.classList.add('dark');
     }
-    
+
     if (shouldAutosave()) {
         document.getElementById('autosave-toggle').checked = true;
     }
