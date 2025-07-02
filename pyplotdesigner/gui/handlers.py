@@ -1,6 +1,5 @@
 from fastapi.responses import JSONResponse
 from pyplotdesigner.core.design import Design
-from pyplotdesigner.core.models import SetValueConstraint
 
 
 def handle_update_layout(data, verbose=False):

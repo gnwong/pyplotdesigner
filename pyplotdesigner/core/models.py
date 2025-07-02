@@ -260,7 +260,7 @@ class SetValueConstraint:
             self.source != other.source or \
             self.multiply != other.multiply or \
             self.add_before != other.add_before or \
-            self.add_after != other.add_after:
+                self.add_after != other.add_after:
             return False
         return True
 

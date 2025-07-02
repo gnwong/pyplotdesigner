@@ -227,6 +227,8 @@ class Design:
             id = val.get('id', None)
             attr = val.get('attr', None)
             if id is None:
+                if attr is None:
+                    return None
                 return float(attr)
             if attr is None:
                 try:
@@ -380,10 +382,10 @@ class Design:
 
         for constraint in constraints:
             target_def = constraint.get('target')
-            source_def = constraint.get('source')
+            source = self._get_attribute_or_value_from_json(constraint.get('source'), None)
             multiply = self._get_attribute_or_value_from_json(constraint.get('multiply'), 1)
-            add_before = self._get_attribute_or_value_from_json(constraint.get('add_before'), 0)
-            add_after = self._get_attribute_or_value_from_json(constraint.get('add_after'), 0)
+            before = self._get_attribute_or_value_from_json(constraint.get('add_before'), 0)
+            after = self._get_attribute_or_value_from_json(constraint.get('add_after'), 0)
 
             if target_def is None:
                 continue
@@ -394,16 +396,8 @@ class Design:
             except ValueError:
                 continue
 
-            source = None
-            if source_def is not None:
-                try:
-                    source = self.get_element_attribute(source_def.get('id'),
-                                                        source_def.get('attr'))
-                except ValueError:
-                    source = None
-
             self.add_constraint(target=target, source=source, multiply=multiply,
-                                add_before=add_before, add_after=add_after)
+                                add_before=before, add_after=after)
 
     def get_json_string(self):
         """
@@ -583,7 +577,7 @@ class Design:
 
     # constraint utilities
 
-    def add_element(self, id=None, type=None, x=0.0, y=0.0, width=1.0, height=1.0, text=None):
+    def add_element(self, id=None, type=None, x=0., y=0., width=1.0, height=1.0, text=None):
         """
         Register a new layout element in the design.
 
