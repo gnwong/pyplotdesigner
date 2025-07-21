@@ -16,7 +16,7 @@ export function getFigureSize() {
     return { width: figureWidth, height: figureHeight };
 }
 
-export let scale = 200;
+export let scale = 120;
 export let offsetX = scale / 2;
 export let offsetY = scale / 2;
 
