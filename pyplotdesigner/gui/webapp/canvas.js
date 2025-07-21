@@ -49,7 +49,7 @@ export function openLayoutModal() {
 
     const applyButton = document.createElement('button');
     applyButton.textContent = 'Apply';
-    applyButton.className = 'add-constraint-button';
+    applyButton.className = 'button-blue';
     applyButton.onclick = () => {
         const scale = parseFloat(scaleInput.value);
         const width = parseFloat(widthInput.value);

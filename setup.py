@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='pyplotdesigner',
-    version='0.1.1',
+    version='2025.7.21',
     packages=find_packages(),
     description="A set of tools to help format matplotlib figures",
     author='gnwong',
