@@ -65,3 +65,31 @@ test('reset, add two axes, rename via panel and canvas selection, then rename co
     .poll(async () => page.locator('#constants-list').innerText())
     .toContain('gap_x');
 });
+
+test('constant edit without intermediate commit does not create duplicate constants', async ({ page }) => {
+  await page.goto('/ui');
+
+  await page.evaluate(() => localStorage.clear());
+  await page.reload();
+
+  await page.getByRole('button', { name: 'Reset' }).click();
+  await page.locator('#add-variable-btn').click();
+  await expect(page.locator('#constants-list .list-item')).toHaveCount(1);
+
+  await page.locator('#constants-list .list-item').first().click();
+
+  const constantNameInput = page.locator('#props input[data-prop="id"]');
+  const constantValueInput = page.locator('#props input[data-prop="value"]');
+  await expect(constantNameInput).toBeVisible();
+  await expect(constantValueInput).toBeVisible();
+
+  await constantNameInput.fill('spacing');
+  await constantValueInput.click();
+  await constantValueInput.fill('0.2');
+  await constantValueInput.press('Enter');
+
+  await expect(page.locator('#constants-list .list-item')).toHaveCount(1);
+  await expect
+    .poll(async () => page.locator('#constants-list').innerText())
+    .toContain('spacing = 0.2');
+});

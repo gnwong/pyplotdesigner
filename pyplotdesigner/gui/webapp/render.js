@@ -26,6 +26,7 @@ export function renderConstantsList(constants) {
     constants.forEach(constant => {
         const constantItem = document.createElement('div');
         constantItem.className = 'list-item';
+        constantItem.dataset.id = constant.id;
         constantItem.innerHTML = `
             <span>${constant.id} = ${constant.value}</span>
         `;

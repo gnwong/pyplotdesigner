@@ -78,11 +78,15 @@ export function updateConstant(id, constant) {
     payload.id = id;
     payload.constant = constant;
 
-    window.constants = window.constants.filter(c => c.id !== id);
+    const idsToReplace = new Set([id, constant?.id].filter(Boolean));
+    window.constants = window.constants.filter(c => !idsToReplace.has(c.id));
     window.constants.push({
         id: constant.id,
         value: constant.value
     });
+
+    // Re-render constants immediately so subsequent edits bind to the latest id.
+    renderConstantsList(window.constants);
 
     queueLayoutRequest(payload);
 }

@@ -6,6 +6,7 @@ type ElementSelector =
   | { by: 'text'; value: string };
 
 type ConstraintSource = ElementSelector | { by: 'constant'; value: string };
+type ConstraintValueRef = ConstraintSource | number;
 
 export type ActionStep =
   | { kind: 'reset' }
@@ -16,7 +17,13 @@ export type ActionStep =
   | { kind: 'selectConstantList'; target: { by: 'alias' | 'id'; value: string } }
   | { kind: 'renameSelected'; prop: 'text' | 'id' | 'value'; value: string }
   | { kind: 'clickPresetConstraint'; name: 'Match Width' | 'Match Height' | 'Align Left' | 'Align Bottom' }
-  | { kind: 'addConstraint'; targetAttr: 'x' | 'y' | 'width' | 'height'; source: ConstraintSource; sourceAttr?: string }
+  | {
+      kind: 'addConstraint';
+      targetAttr: 'x' | 'y' | 'width' | 'height';
+      source: ConstraintSource;
+      sourceAttr?: string;
+      addAfter?: ConstraintValueRef;
+    }
   | { kind: 'assertStatusText'; text: string }
   | { kind: 'assertCounts'; elements?: number; constants?: number; constraints?: number };
 
@@ -48,6 +55,37 @@ function resolveId(ctx: RunnerContext, selector: ElementSelector | { by: 'alias'
     return mapped as string;
   }
   return selector.value;
+}
+
+async function hasConstantId(page: Page, id: string): Promise<boolean> {
+  return page.evaluate((constantId) => {
+    const constants = (window as unknown as { constants?: Array<{ id: string }> }).constants || [];
+    return constants.some((constant) => constant.id === constantId);
+  }, id);
+}
+
+async function resolveConstantId(
+  page: Page,
+  ctx: RunnerContext,
+  selector: { by: 'alias' | 'id'; value: string }
+): Promise<string> {
+  if (selector.by === 'id') {
+    return selector.value;
+  }
+
+  const mapped = ctx.aliases.get(selector.value);
+  if (mapped && (await hasConstantId(page, mapped))) {
+    return mapped;
+  }
+
+  // Constant aliases can diverge from runtime ids after renaming; prefer a live id.
+  if (await hasConstantId(page, selector.value)) {
+    ctx.aliases.set(selector.value, selector.value);
+    return selector.value;
+  }
+
+  expect(mapped, `Missing alias "${selector.value}"`).toBeTruthy();
+  return mapped as string;
 }
 
 async function aliasLastElement(page: Page, ctx: RunnerContext, alias: string): Promise<void> {
@@ -85,22 +123,9 @@ async function clickElementListById(page: Page, id: string): Promise<void> {
 }
 
 async function clickConstantListById(page: Page, id: string): Promise<void> {
-  const clicked = await page.evaluate((constantId) => {
-    const runtime = window as unknown as { constants?: Array<{ id: string }> };
-    const constants = runtime.constants || [];
-    const index = constants.findIndex((c) => c.id === constantId);
-    if (index < 0) {
-      return false;
-    }
-    const items = document.querySelectorAll('#constants-list .list-item');
-    const item = items[index] as HTMLElement | undefined;
-    if (!item) {
-      return false;
-    }
-    item.click();
-    return true;
-  }, id);
-  expect(clicked, `Failed to click constant "${id}" in list`).toBeTruthy();
+  const item = page.locator(`#constants-list .list-item[data-id="${id}"]`).first();
+  await expect(item, `Failed to find constant "${id}" in list`).toBeVisible();
+  await item.click();
 }
 
 async function clickElementCanvas(page: Page, id: string): Promise<void> {
@@ -129,7 +154,7 @@ async function renameSelected(page: Page, prop: 'text' | 'id' | 'value', value: 
   const input = page.locator(`#props input[data-prop="${prop}"]`);
   await expect(input).toBeVisible();
   await input.fill(value);
-  await page.keyboard.press('Tab');
+  await input.dispatchEvent('change');
   await expect(input).toHaveValue(value);
 }
 
@@ -161,7 +186,7 @@ async function addConstraint(
     .click();
 
   if (step.source.by === 'constant') {
-    const constantId = ctx.aliases.get(step.source.value) ?? step.source.value;
+    const constantId = await resolveConstantId(page, ctx, { by: 'alias', value: step.source.value });
     await clickConstantListById(page, constantId);
   } else {
     const sourceId = step.source.by === 'text' ? null : resolveId(ctx, step.source);
@@ -169,6 +194,28 @@ async function addConstraint(
       await clickElementListById(page, sourceId);
     } else {
       await page.locator('#elements-list .list-item').filter({ hasText: step.source.value }).first().click();
+    }
+  }
+
+  if (typeof step.addAfter !== 'undefined') {
+    if (typeof step.addAfter === 'number') {
+      await page.locator('#add-after-constraint-editor-input').fill(String(step.addAfter));
+    } else {
+      await page
+        .locator('#add-after-constraint-editor-input')
+        .locator('xpath=following-sibling::button[normalize-space()="Select"]')
+        .click();
+      if (step.addAfter.by === 'constant') {
+        const constantId = await resolveConstantId(page, ctx, { by: 'alias', value: step.addAfter.value });
+        await clickConstantListById(page, constantId);
+      } else {
+        const sourceId = step.addAfter.by === 'text' ? null : resolveId(ctx, step.addAfter);
+        if (sourceId) {
+          await clickElementListById(page, sourceId);
+        } else {
+          await page.locator('#elements-list .list-item').filter({ hasText: step.addAfter.value }).first().click();
+        }
+      }
     }
   }
 
@@ -185,17 +232,19 @@ async function exportLayout(page: Page): Promise<string> {
   return serialized;
 }
 
-function isLayoutUpdateResponse(url: string, method: string): boolean {
+function isLayoutUpdateRequest(url: string, method: string): boolean {
   return method === 'POST' && url.includes('/api/update_layout');
 }
 
 async function runAndWaitForLayoutUpdate(page: Page, action: () => Promise<void>): Promise<void> {
-  const updatePromise = page.waitForResponse(
-    (response) => isLayoutUpdateResponse(response.url(), response.request().method()),
+  const requestPromise = page.waitForRequest(
+    (request) => isLayoutUpdateRequest(request.url(), request.method()),
     { timeout: LAYOUT_UPDATE_TIMEOUT_MS }
   );
   await action();
-  await updatePromise;
+  const request = await requestPromise;
+  const response = await request.response();
+  expect(response, 'Expected /api/update_layout response').toBeTruthy();
 }
 
 export async function runActionScenario(page: Page, scenario: ActionScenario): Promise<string> {
@@ -255,7 +304,8 @@ export async function runActionScenario(page: Page, scenario: ActionScenario): P
       continue;
     }
     if (step.kind === 'selectConstantList') {
-      await clickConstantListById(page, resolveId(ctx, step.target));
+      const constantId = await resolveConstantId(page, ctx, step.target);
+      await clickConstantListById(page, constantId);
       continue;
     }
     if (step.kind === 'renameSelected') {
