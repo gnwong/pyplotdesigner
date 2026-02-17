@@ -17,8 +17,12 @@ pip install pyplotdesigner
 python -m pyplotdesigner.gui.main
 ```
 
-Open:
-- `http://127.0.0.1:8080`
+This opens your browser automatically. If it does not, open:
+- `http://127.0.0.1:8080/ui`
+
+Optional:
+- `python -m pyplotdesigner.gui.main --no-browser` (disable auto-open)
+- `python -m pyplotdesigner.gui.main --reload` (enable auto-reload for dev)
 
 ## 3) Build a layout in the GUI
 1. Click **Add Axis**.
