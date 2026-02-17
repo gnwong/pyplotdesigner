@@ -21,3 +21,5 @@ docs/api/
 *.png
 node_modules/
 test-results/
+!tests/e2e/*.spec.ts-snapshots/
+!tests/e2e/*.spec.ts-snapshots/*.png
