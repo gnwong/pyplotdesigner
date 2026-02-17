@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.5.0] - 0.5.0
+
+###Changed
+- Adopted semantic versioning (`MAJOR.MINOR.PATCH`), replacing the previous date-based versioning scheme (`YYYY.MM.DD`). No functional changes. This release coincides with yanking previous versioning scheme versions on pypi.
+
 ## [2026.2.17] - 2026-02-17
 
 ### Added

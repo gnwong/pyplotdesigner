@@ -7,7 +7,7 @@ README = Path(__file__).parent / "README.md"
 
 setup(
     name='pyplotdesigner',
-    version='2026.2.16',
+    version='0.5.0',
     packages=find_packages(),
     install_requires=[
         'numpy',
