@@ -1,4 +1,4 @@
-import { canvas, arrowCanvas, borderWidth, setSelectedItem, getSelectedItem, completeSelection, runInteractiveAction } from './shared.js';
+import { canvas, arrowCanvas, borderWidth, setSelectedItem, getSelectedItem, setHoveredItem, getHoveredItem, completeSelection, runInteractiveAction } from './shared.js';
 import { drawGrid, getImageCoords, getScreenCoords } from './canvas.js';
 import { getConstraintDescription, getNameOfElement, getVariableDescription, constraintsEqual } from './constraints.js';
 import { sendLayoutUpdate, sendDelete, deleteConstant, deleteConstraint } from './api.js';
@@ -79,6 +79,10 @@ export function renderLayout(elements = null) {
     }
     window.elements = elements;
 
+    if (!elements.some(el => String(el.id) === String(getHoveredItem()))) {
+        setHoveredItem(null);
+    }
+
     elements.forEach(el => {
         const { screenX, screenY, screenWidth, screenHeight } = getScreenCoords(el.x, el.y, el.width, el.height);
         const div = document.createElement('div');
@@ -93,10 +97,21 @@ export function renderLayout(elements = null) {
         div.style.height = screenHeight - 2 * borderWidth + 'px';
         div.style.padding = '0px';
         div.style.borderWidth = borderWidth + 'px';
-        div.style.borderColor = (div.dataset.id == getSelectedItem()) ? 'red' : 'black';
+        div.addEventListener('mouseenter', () => {
+            setHoveredItem(el.id);
+            refreshElementHighlights();
+        });
+        div.addEventListener('mouseleave', () => {
+            if (String(getHoveredItem()) === String(el.id)) {
+                setHoveredItem(null);
+                refreshElementHighlights();
+            }
+        });
         makeDraggable(div);
         canvas.appendChild(div);
     });
+
+    refreshElementHighlights();
 
     // rerender constraints and lists/properties
     renderConstantsList(window.constants || []);
@@ -186,15 +201,13 @@ function setActiveFromId(elementId) {
 }
 
 function setActiveFromElement(el) {
-    const all = document.querySelectorAll('.draggable');
-    all.forEach(div => div.style.borderColor = 'black');
     if (el === null) {
         setSelectedItem(null);
     } else {
-        el.style.borderColor = 'red';
         setSelectedItem(el.dataset.id);
         updateProps(el);
     }
+    refreshElementHighlights();
 }
 
 function populatePlotElementsList(elements) {
@@ -205,7 +218,8 @@ function populatePlotElementsList(elements) {
 
     elements.forEach(el => {
         const listItem = document.createElement('div');
-        listItem.className = 'list-item';
+        listItem.className = 'list-item plot-element-list-item';
+        listItem.dataset.id = el.id;
 
         listItem.innerHTML = `
             <div class="element-entry">
@@ -225,8 +239,46 @@ function populatePlotElementsList(elements) {
             }
         });
 
+        listItem.addEventListener('mouseenter', () => {
+            setHoveredItem(el.id);
+            refreshElementHighlights();
+        });
+
+        listItem.addEventListener('mouseleave', () => {
+            if (String(getHoveredItem()) === String(el.id)) {
+                setHoveredItem(null);
+                refreshElementHighlights();
+            }
+        });
+
         listContainer.appendChild(listItem);
     });
+
+    refreshElementHighlights();
+}
+
+function applyCanvasElementState(element) {
+    const id = element.dataset.id;
+    const isSelected = String(id) === String(getSelectedItem());
+    const isHovered = String(id) === String(getHoveredItem());
+    element.classList.toggle('is-selected', isSelected);
+    element.classList.toggle('is-hovered', !isSelected && isHovered);
+}
+
+function applyElementListItemState(item) {
+    const id = item.dataset.id;
+    const isSelected = String(id) === String(getSelectedItem());
+    const isHovered = String(id) === String(getHoveredItem());
+    item.classList.toggle('is-selected', isSelected);
+    item.classList.toggle('is-hovered', !isSelected && isHovered);
+}
+
+function refreshElementHighlights() {
+    const canvasElements = document.querySelectorAll('.draggable');
+    canvasElements.forEach(applyCanvasElementState);
+
+    const listItems = document.querySelectorAll('.plot-element-list-item');
+    listItems.forEach(applyElementListItemState);
 }
 
 function createConstraintPropBlock(id, label, propName) {

@@ -33,12 +33,21 @@ export function getScale() {
 }
 
 export let selectedItem = null;
+export let hoveredItem = null;
 
 export function setSelectedItem(id) {
     selectedItem = id;
 }
 export function getSelectedItem() {
     return selectedItem;
+}
+
+export function setHoveredItem(id) {
+    hoveredItem = id;
+}
+
+export function getHoveredItem() {
+    return hoveredItem;
 }
 
 export let selectionCallback = null;

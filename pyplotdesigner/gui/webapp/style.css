@@ -272,6 +272,22 @@ canvas.arrows-bg {
     justify-content: center;
 }
 
+.draggable.is-hovered {
+    border-color: #007bff;
+    background: #cddfff;
+    color: #1f3552;
+    font-weight: 600;
+    box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.2);
+}
+
+.draggable.is-selected {
+    border-color: red;
+    background: #ffdede;
+    color: #5c1f1f;
+    font-weight: 600;
+    box-shadow: 0 0 0 2px rgba(255, 0, 0, 0.15);
+}
+
 .status-bar {
     background: #eee;
     border-top: 1px solid var(--color-border-medium);
@@ -405,6 +421,14 @@ canvas.arrows-bg {
 
 .list-item:hover {
     background-color: #e6e6e6;
+}
+
+.plot-element-list-item.is-hovered {
+    background-color: #e6e6e6;
+}
+
+.plot-element-list-item.is-selected {
+    background-color: #dbe9ff;
 }
 
 .prop-section,
