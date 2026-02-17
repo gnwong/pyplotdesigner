@@ -6,7 +6,9 @@
   "scripts": {
     "e2e": "playwright test",
     "e2e:headed": "playwright test --headed",
-    "e2e:ui": "playwright test --ui"
+    "e2e:ui": "playwright test --ui",
+    "e2e:update-action-exports": "node scripts/update_action_sequence_exports.mjs",
+    "e2e:update-snapshots": "playwright test tests/e2e/layout_reference.spec.ts --update-snapshots"
   },
   "devDependencies": {
     "@playwright/test": "^1.51.0",
