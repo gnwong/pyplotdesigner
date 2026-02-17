@@ -1,8 +1,13 @@
+from pathlib import Path
+
 from setuptools import setup, find_packages
+
+
+README = Path(__file__).parent / "README.md"
 
 setup(
     name='pyplotdesigner',
-    version='2025.7.21',
+    version='2026.2.16',
     packages=find_packages(),
     install_requires=[
         'numpy',
@@ -11,6 +16,8 @@ setup(
         'uvicorn',
     ],
     description="A set of tools to help format matplotlib figures",
+    long_description=README.read_text(encoding="utf-8"),
+    long_description_content_type="text/markdown",
     author='gnwong',
     author_email='gnwong@ias.edu',
     url="https://github.com/gnwong/pyplotdesigner",
