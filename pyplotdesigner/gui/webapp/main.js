@@ -4,7 +4,7 @@ import { drawGrid, openLayoutModal } from './canvas.js';
 import { sendAdd, sendLayoutUpdate, getLayoutPayload, processReceivedPayload } from './api.js'
 import { renderLayout, updateElementFromProps } from './render.js'
 import { updateConstantFromProps } from './constants.js';
-import { initializeStatusBar } from './status.js';
+import { initializeStatusBar, showToast } from './status.js';
 
 function shouldAutosave() {
     const autosave = localStorage.getItem('autosave-enabled');
@@ -42,7 +42,7 @@ function openImportExportModal() {
 
     const textarea = document.createElement('textarea');
     textarea.className = 'import-export-textarea';
-    textarea.value = btoa(JSON.stringify(getLayoutPayload()));
+    textarea.value = getImportString();
 
     const closeButton = document.createElement('button');
     closeButton.textContent = 'Close';
@@ -70,6 +70,49 @@ function openImportExportModal() {
     modal.appendChild(textarea);
     modal.appendChild(controls);
     document.body.appendChild(modal);
+}
+
+function getImportString() {
+    return btoa(JSON.stringify(getLayoutPayload()));
+}
+
+function getPythonImportSnippet(importString) {
+    return [
+        'from pyplotdesigner.core.design_loader import make_figure_from_b64',
+        `import_string = "${importString}"`,
+        'fig, axes = make_figure_from_b64(import_string)'
+    ].join('\n');
+}
+
+async function copyPythonSnippetToClipboard() {
+    const importString = getImportString();
+    const snippet = getPythonImportSnippet(importString);
+    if (navigator.clipboard && window.isSecureContext) {
+        await navigator.clipboard.writeText(snippet);
+        return;
+    }
+
+    const textarea = document.createElement('textarea');
+    textarea.value = snippet;
+    textarea.setAttribute('readonly', '');
+    textarea.style.position = 'fixed';
+    textarea.style.opacity = '0';
+    document.body.appendChild(textarea);
+    textarea.select();
+    const copied = document.execCommand('copy');
+    document.body.removeChild(textarea);
+    if (!copied) {
+        throw new Error('Clipboard write failed');
+    }
+}
+
+async function copyPythonImportCode() {
+    try {
+        await copyPythonSnippetToClipboard();
+        showToast('Copied Python import snippet to clipboard.', { level: 'info' });
+    } catch (err) {
+        showToast(`Unable to copy Python snippet: ${err.message}`, { level: 'error', timeoutMs: 4000 });
+    }
 }
 
 function toggleLock(id, attr) {
@@ -100,6 +143,7 @@ window.toggleDarkMode = toggleDarkMode;
 window.resetLayout = resetLayout;
 window.toggleAutosave = toggleAutosave;
 window.openImportExportModal = openImportExportModal;
+window.copyPythonImportCode = copyPythonImportCode;
 window.openLayoutModal = openLayoutModal;
 
 // expose functions for modifying layout and constraints
