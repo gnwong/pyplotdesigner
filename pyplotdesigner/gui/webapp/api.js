@@ -3,6 +3,27 @@ import { renderLayout, renderConstantsList, renderConstraintsList } from './rend
 import { constraintsEqual } from './constraints.js';
 import { getImageCoords } from './canvas.js';
 
+let layoutRequestQueue = Promise.resolve();
+
+function queueLayoutRequest(payload) {
+    layoutRequestQueue = layoutRequestQueue
+        .catch(() => {
+            // Keep the queue alive after previous failures.
+        })
+        .then(() =>
+            fetch('/api/update_layout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload)
+            })
+            .then(res => res.json())
+            .then(data => {
+                processReceivedPayload(data);
+            })
+        );
+    return layoutRequestQueue;
+}
+
 export function getLayoutPayload() {
     const elements = Array.from(canvas.children)
         .filter(el => el.classList.contains('draggable'))
@@ -63,15 +84,7 @@ export function updateConstant(id, constant) {
         value: constant.value
     });
 
-    fetch('/api/update_layout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(data => {
-        processReceivedPayload(data);
-    });    
+    queueLayoutRequest(payload);
 }
 
 export function sendAdd(type) {
@@ -79,18 +92,19 @@ export function sendAdd(type) {
     payload.action = 'add';
     payload.new_type = type;
 
-    fetch('/api/update_layout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(data => {
-        processReceivedPayload(data);
-    });    
+    queueLayoutRequest(payload);
 }
 
 export function saveState(payload) {
+    const isEmpty = (payload.elements || []).length === 0 &&
+        (payload.constants || []).length === 0 &&
+        (payload.constraints || []).length === 0;
+
+    if (isEmpty) {
+        localStorage.removeItem('pyplotdesigner-state');
+        return;
+    }
+
     if (localStorage.getItem('autosave-enabled') === 'true') {
         localStorage.setItem('pyplotdesigner-state', JSON.stringify(payload));
     }
@@ -101,29 +115,13 @@ export function sendDelete(elementId) {
     payload.action = 'delete';
     payload.element_id = elementId;
 
-    fetch('/api/update_layout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(data => {
-        processReceivedPayload(data);
-    });    
+    queueLayoutRequest(payload);
 }
 
 export function sendLayoutUpdate() {
     const payload = getLayoutPayload();
 
-    fetch('/api/update_layout', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-    })
-    .then(res => res.json())
-    .then(data => {
-        processReceivedPayload(data);
-    });
+    queueLayoutRequest(payload);
 }
 
 export function processReceivedPayload(data) {
