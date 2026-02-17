@@ -55,7 +55,7 @@ export function renderConstraintsList(constraints) {
         `;
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
-        deleteButton.className = 'btn btn-warn';
+        deleteButton.className = 'btn btn-warn btn-compact';
         deleteButton.onclick = () => deleteConstraint(constraint);
         constraintItem.appendChild(deleteButton);
         constraintItem.addEventListener('click', () => {
@@ -214,7 +214,7 @@ function populatePlotElementsList(elements) {
 
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
-        deleteButton.className = 'btn btn-warn';
+        deleteButton.className = 'btn btn-warn btn-compact';
         deleteButton.onclick = () => sendDelete(el.id);
         listItem.appendChild(deleteButton);
 
