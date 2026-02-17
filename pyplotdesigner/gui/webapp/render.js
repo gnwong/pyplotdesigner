@@ -1,7 +1,8 @@
-import { canvas, arrowCanvas, borderWidth, setSelectedItem, getSelectedItem, startSelecting, completeSelection } from './shared.js';
+import { canvas, arrowCanvas, borderWidth, setSelectedItem, getSelectedItem, completeSelection, runInteractiveAction } from './shared.js';
 import { drawGrid, getImageCoords, getScreenCoords } from './canvas.js';
 import { getConstraintDescription, getNameOfElement, getVariableDescription, constraintsEqual } from './constraints.js';
 import { sendLayoutUpdate, sendDelete, deleteConstant, deleteConstraint } from './api.js';
+import { showToast } from './status.js';
 
 function renderConstantDetail(constant) {
     let props = document.getElementById('props');
@@ -357,18 +358,31 @@ function createConstraintComponentBlock({ name, label, value = null, showSelect 
         selectButton.className = 'btn btn-main btn-compact';
 
         selectButton.onclick = () => {
-            startSelecting((reference) => {
-                if (reference.type === 'constant') {
-                    input.dataset.type = 'constant';
-                    input.dataset.vid = reference.id;
-                    input.dataset.attr = null;
-                    input.value = `${reference.id}`;
-                } else if (reference.type === 'element') {
-                    let attr = prompt("Enter attribute (x, y, width, height, left, right, top, bottom):", "x");
-                    input.dataset.type = 'element';
-                    input.dataset.vid = reference.id;
-                    input.dataset.attr = attr;
-                    input.value = `${getNameOfElement(reference.id)}.${attr}`;
+            runInteractiveAction({
+                promptText: 'Waiting for input: select a source element or constant.',
+                cancelText: 'Source selection canceled.',
+                onSelect: (reference) => {
+                    if (reference.type === 'constant') {
+                        input.dataset.type = 'constant';
+                        input.dataset.vid = reference.id;
+                        input.dataset.attr = null;
+                        input.value = `${reference.id}`;
+                    } else if (reference.type === 'element') {
+                        const attr = prompt("Enter attribute (x, y, width, height, left, right, top, bottom):", "x");
+                        if (attr === null) {
+                            showToast('Source attribute selection canceled.', { level: 'warn' });
+                            return;
+                        }
+                        const normalizedAttr = attr.trim();
+                        if (!normalizedAttr) {
+                            showToast('Source attribute selection canceled.', { level: 'warn' });
+                            return;
+                        }
+                        input.dataset.type = 'element';
+                        input.dataset.vid = reference.id;
+                        input.dataset.attr = normalizedAttr;
+                        input.value = `${getNameOfElement(reference.id)}.${normalizedAttr}`;
+                    }
                 }
             });
         };
@@ -500,8 +514,7 @@ function addPresetConstraint(elementId, type) {
         }
 
         case 'alignLeft': {
-            alert("Click the element you want to align with.");
-            startSelecting(reference => {
+            startElementSelection('Waiting for input: select element to align left with.', reference => {
                 window.constraints.push({
                     target: { id: elementId, attr: 'x' },
                     source: { id: reference.id, attr: 'x' },
@@ -509,14 +522,12 @@ function addPresetConstraint(elementId, type) {
                     add_before: 0,
                     add_after: 0
                 });
-                sendLayoutUpdate();
             });
             return;
         }
 
         case 'alignBottom': {
-            alert("Click the element you want to align with.");
-            startSelecting(reference => {
+            startElementSelection('Waiting for input: select element to align bottom with.', reference => {
                 window.constraints.push({
                     target: { id: elementId, attr: 'y' },
                     source: { id: reference.id, attr: 'y' },
@@ -524,14 +535,12 @@ function addPresetConstraint(elementId, type) {
                     add_before: 0,
                     add_after: 0
                 });
-                sendLayoutUpdate();
             });
             return;
         }
 
         case 'matchWidth': {
-            alert("Click the element whose width you want to match.");
-            startSelecting(reference => {
+            startElementSelection('Waiting for input: select element to match width.', reference => {
                 window.constraints.push({
                     target: { id: elementId, attr: 'width' },
                     source: { id: reference.id, attr: 'width' },
@@ -539,14 +548,12 @@ function addPresetConstraint(elementId, type) {
                     add_before: 0,
                     add_after: 0
                 });
-                sendLayoutUpdate();
             });
             return;
         }
 
         case 'matchHeight': {
-            alert("Click the element whose height you want to match.");
-            startSelecting(reference => {
+            startElementSelection('Waiting for input: select element to match height.', reference => {
                 window.constraints.push({
                     target: { id: elementId, attr: 'height' },
                     source: { id: reference.id, attr: 'height' },
@@ -554,13 +561,27 @@ function addPresetConstraint(elementId, type) {
                     add_before: 0,
                     add_after: 0
                 });
-                sendLayoutUpdate();
             });
             return;
         }
     }
 
     sendLayoutUpdate();
+}
+
+function startElementSelection(promptText, callback) {
+    runInteractiveAction({
+        promptText,
+        cancelText: 'Selection canceled.',
+        validate: (reference) => reference.type === 'element',
+        onInvalid: () => {
+            showToast('Select an element from the canvas or Elements list.', { level: 'warn' });
+        },
+        onSelect: (reference) => {
+            callback(reference);
+            sendLayoutUpdate();
+        }
+    });
 }
 
 function renderElementConstraintsSection(el) {

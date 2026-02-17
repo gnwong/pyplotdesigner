@@ -4,6 +4,7 @@ import { drawGrid, openLayoutModal } from './canvas.js';
 import { sendAdd, sendLayoutUpdate, getLayoutPayload, processReceivedPayload } from './api.js'
 import { renderLayout, updateElementFromProps } from './render.js'
 import { updateConstantFromProps } from './constants.js';
+import { initializeStatusBar } from './status.js';
 
 function shouldAutosave() {
     const autosave = localStorage.getItem('autosave-enabled');
@@ -113,6 +114,7 @@ window.addEventListener('load', () => {
     sendLayoutUpdate();
 });
 window.addEventListener('DOMContentLoaded', () => {
+    initializeStatusBar();
     restorePanelSizes();
     setupResizablePanels();
 

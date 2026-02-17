@@ -279,6 +279,33 @@ canvas.arrows-bg {
     font-size: 0.85em;
     color: var(--color-text-default);
     white-space: nowrap;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    gap: 8px;
+}
+
+.status-bar[data-level="mode"] {
+    background: #fff8dd;
+    border-top-color: #d8c488;
+    color: #5f4b1a;
+}
+
+.status-bar[data-level="warn"] {
+    background: #fff1df;
+    border-top-color: #d7b27d;
+    color: #6d4314;
+}
+
+.status-bar[data-level="error"] {
+    background: #ffe3e3;
+    border-top-color: #d99090;
+    color: #7a1f1f;
+}
+
+#status-text {
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 /* Modals */

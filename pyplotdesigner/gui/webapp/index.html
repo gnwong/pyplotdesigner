@@ -49,7 +49,10 @@
     </div>
   </div>
 
-  <div class="status-bar">Status: Ready</div>
+  <div id="status-bar" class="status-bar" data-level="ready" role="status" aria-live="polite">
+    <span id="status-text">Status: Ready</span>
+    <button id="status-action" class="btn btn-secondary btn-compact" type="button" style="display: none;">Cancel</button>
+  </div>
   <script type="module" src="main.js"></script>
 </body>
 </html>
