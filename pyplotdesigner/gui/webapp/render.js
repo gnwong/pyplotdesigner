@@ -698,6 +698,11 @@ function renderElementConstraintsSection(el) {
 
 function makeDraggable(el) {
     el.onmousedown = function (e) {
+        if (completeSelection({ type: 'element', id: el.dataset.id })) {
+            e.preventDefault();
+            return;
+        }
+
         setActiveFromElement(el);
         let offsetX = e.clientX - el.offsetLeft;
         let offsetY = e.clientY - el.offsetTop;
