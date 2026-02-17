@@ -7,13 +7,13 @@ function renderConstantDetail(constant) {
     let props = document.getElementById('props');
     props.innerHTML = `
     <div class="prop-section">
-        <h3><em>Properties</em></h3>
+        <h3 class="inspector-section-title"><em>Properties</em></h3>
         ${createPropBlock({ id: constant.id, label: "Type", value: 'constant', propName: "type", showLock: false, readonly: true })}
         ${createPropBlock({ id: constant.id, label: "Name", value: constant.id, propName: "id", showLock: false, updateFn: "updateConstantFromProps" })}
         ${createPropBlock({ id: constant.id, label: "value", value: constant.value, propName: "value", showLock: false, type: "number", updateFn: "updateConstantFromProps" })}
     </div>
     <div id="constraint-form" class="prop-section">
-        <h3><em>Constraints</em></h3>
+        <h3 class="inspector-section-title"><em>Constraints</em></h3>
     </div>
     `;
 }
@@ -135,7 +135,7 @@ function updateProps(el) {
     let props = document.getElementById('props');
     props.innerHTML = `
     <div class="prop-section">
-        <h3><em>Properties</em></h3>
+        <h3 class="inspector-section-title"><em>Properties</em></h3>
         ${createPropBlock({ id: el.dataset.id, label: "Type", value: el.dataset.type, propName: "type", showLock: false, readonly: true })}
         ${createPropBlock({ id: el.dataset.id, label: "Name", value: el.dataset.text, propName: "text", showLock: false })}
         ${createPropBlock({ id: el.dataset.id, label: "X", value: imageX, propName: "x", type: "number" })}
@@ -144,7 +144,7 @@ function updateProps(el) {
         ${createPropBlock({ id: el.dataset.id, label: "Height", value: imageHeight, propName: "height", type: "number" })}
     </div>
     <div id="constraint-form" class="prop-section">
-        <h3><em>Constraints</em></h3>
+        <h3 class="inspector-section-title"><em>Constraints</em></h3>
     </div>
     `;
 
@@ -415,6 +415,7 @@ function openConstraintEditor(constraint) {
     editor.innerHTML = '';
 
     const editorHeading = document.createElement('h4');
+    editorHeading.className = 'inspector-subtitle';
     editorHeading.textContent = 'Custom Constraint Editor';
     editor.appendChild(editorHeading);
 
@@ -589,6 +590,7 @@ function renderElementConstraintsSection(el) {
     presetSection.className = 'constraint-add-buttons';
 
     const presetHeading = document.createElement('h4');
+    presetHeading.className = 'inspector-subtitle';
     presetHeading.textContent = 'Apply Preset Constraint';
     presetSection.appendChild(presetHeading);
 
