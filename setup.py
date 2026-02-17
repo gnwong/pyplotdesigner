@@ -4,6 +4,12 @@ setup(
     name='pyplotdesigner',
     version='2025.7.21',
     packages=find_packages(),
+    install_requires=[
+        'numpy',
+        'matplotlib',
+        'fastapi',
+        'uvicorn',
+    ],
     description="A set of tools to help format matplotlib figures",
     author='gnwong',
     author_email='gnwong@ias.edu',
