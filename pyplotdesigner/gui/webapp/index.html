@@ -9,14 +9,14 @@
 </head>
 <body>
   <div class="toolbar">
-    <button id="add-axis-btn" onclick="sendAdd('axis')">Add Axis</button>
-    <!-- <button id="add-label-btn" onclick="sendAdd('label')">Add Label</button> -->
-    <button id="add-variable-btn" onclick="sendAdd('constant')">Add Constant</button>
+    <button id="add-axis-btn" class="btn btn-main btn-toolbar" onclick="sendAdd('axis')">Add Axis</button>
+    <!-- <button id="add-label-btn" class="btn btn-main btn-toolbar" onclick="sendAdd('label')">Add Label</button> -->
+    <button id="add-variable-btn" class="btn btn-main btn-toolbar" onclick="sendAdd('constant')">Add Constant</button>
     <div id="dark-mode-toggle"></div>
-    <button onclick="openLayoutModal()">Set Layout</button>
-    <button onclick="openImportExportModal()">Import/Export</button>
-    <button onclick="resetLayout()">Reset</button>
-    <button id="autosave-toggle" onclick="toggleAutosave()" class="toggle-button">Autosave: OFF</button>
+    <button class="btn btn-secondary btn-toolbar" onclick="openLayoutModal()">Set Layout</button>
+    <button class="btn btn-secondary btn-toolbar" onclick="openImportExportModal()">Import/Export</button>
+    <button class="btn btn-warn btn-toolbar" onclick="resetLayout()">Reset</button>
+    <button id="autosave-toggle" onclick="toggleAutosave()" class="btn btn-secondary btn-toolbar toggle-button">Autosave: OFF</button>
   </div>
 
   <div class="main">

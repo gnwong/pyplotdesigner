@@ -49,7 +49,7 @@ export function openLayoutModal() {
 
     const applyButton = document.createElement('button');
     applyButton.textContent = 'Apply';
-    applyButton.className = 'button-blue';
+    applyButton.className = 'btn btn-main';
     applyButton.onclick = () => {
         const scale = parseFloat(scaleInput.value);
         const width = parseFloat(widthInput.value);
@@ -67,6 +67,7 @@ export function openLayoutModal() {
 
     const cancelButton = document.createElement('button');
     cancelButton.textContent = 'Cancel';
+    cancelButton.className = 'btn btn-secondary';
     cancelButton.onclick = () => {
         document.body.removeChild(overlay);
     };

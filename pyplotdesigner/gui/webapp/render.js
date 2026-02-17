@@ -30,7 +30,7 @@ export function renderConstantsList(constants) {
         `;
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
-        deleteButton.className = 'button-red';
+        deleteButton.className = 'btn btn-warn btn-compact';
         deleteButton.onclick = () => deleteConstant(constant);
         constantItem.appendChild(deleteButton);
         constantItem.addEventListener('click', () => {
@@ -55,7 +55,7 @@ export function renderConstraintsList(constraints) {
         `;
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
-        deleteButton.className = 'button-red';
+        deleteButton.className = 'btn btn-warn';
         deleteButton.onclick = () => deleteConstraint(constraint);
         constraintItem.appendChild(deleteButton);
         constraintItem.addEventListener('click', () => {
@@ -107,7 +107,7 @@ export function renderLayout(elements = null) {
 
 function createPropBlock({id, label, value, propName, type = "text", locked = false, showLock = true, readonly = false, updateFn = "updateElementFromProps"}) {
     const lockButton = showLock
-        ? `<button onclick="toggleLock('${id}', '${propName}')">${locked ? '🔒' : '🔓'}</button>`
+        ? `<button class="btn btn-secondary btn-compact" onclick="toggleLock('${id}', '${propName}')">${locked ? '🔒' : '🔓'}</button>`
         : '';
     const readonlyAttribute = readonly ? 'readonly' : '';
     return `
@@ -214,7 +214,7 @@ function populatePlotElementsList(elements) {
 
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
-        deleteButton.className = 'button-red';
+        deleteButton.className = 'btn btn-warn';
         deleteButton.onclick = () => sendDelete(el.id);
         listItem.appendChild(deleteButton);
 
@@ -256,7 +256,7 @@ function createConstraintPropBlock(id, label, propName) {
 
         const deleteButton = document.createElement('button');
         deleteButton.textContent = 'Delete';
-        deleteButton.className = 'button-red';
+        deleteButton.className = 'btn btn-warn';
         deleteButton.onclick = () => {
             deleteConstraint(constraint);
             sendLayoutUpdate();
@@ -279,7 +279,7 @@ function createConstraintPropBlock(id, label, propName) {
 
         const addButton = document.createElement('button');
         addButton.textContent = 'Add Constraint';
-        addButton.className = 'button-blue';
+        addButton.className = 'btn btn-main btn-compact';
         addButton.onclick = () => openConstraintEditor(
             {
                 target: { id: id, attr: propName },
@@ -354,7 +354,7 @@ function createConstraintComponentBlock({ name, label, value = null, showSelect 
     if (showSelect) {
         const selectButton = document.createElement('button');
         selectButton.textContent = 'Select';
-        selectButton.className = 'button-blue';
+        selectButton.className = 'btn btn-main btn-compact';
 
         selectButton.onclick = () => {
             startSelecting((reference) => {
@@ -436,7 +436,7 @@ function openConstraintEditor(constraint) {
 
     const submitButton = document.createElement('button');
     submitButton.textContent = 'Apply';
-    submitButton.className = 'button-blue';
+    submitButton.className = 'btn btn-main';
     submitButton.onclick = () => {
 
         const targetInput = document.querySelector('#target-constraint-editor-input');
@@ -609,7 +609,7 @@ function renderElementConstraintsSection(el) {
         wrapper.style.marginBottom = '4px';
 
         const button = document.createElement('button');
-        button.className = 'button-blue';
+        button.className = 'btn btn-main';
         button.textContent = preset.label;
         button.onclick = () => addPresetConstraint(el.dataset.id, preset.type);
 

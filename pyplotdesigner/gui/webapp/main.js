@@ -45,10 +45,12 @@ function openImportExportModal() {
 
     const closeButton = document.createElement('button');
     closeButton.textContent = 'Close';
+    closeButton.className = 'btn btn-secondary';
     closeButton.onclick = () => modal.remove();
 
     const importButton = document.createElement('button');
     importButton.textContent = 'Import';
+    importButton.className = 'btn btn-main';
     importButton.onclick = () => {
         try {
             const data = JSON.parse(atob(textarea.value));

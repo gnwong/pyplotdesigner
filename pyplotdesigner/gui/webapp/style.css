@@ -43,10 +43,16 @@ body {
     box-sizing: border-box;
 }
 
-.prop-header {
+.prop-header,
+.constraint-action-row,
+.modal-input-row,
+.list-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
+}
+
+.prop-header {
     margin-bottom: 5px;
 }
 
@@ -61,13 +67,18 @@ body {
     gap: 5px;
 }
 
-.prop-block input {
-    width: 100%;
+.prop-block input,
+.modal-input-row input,
+.import-export-textarea {
     box-sizing: border-box;
-    padding: 8px;
-    font-size: var(--font-size-md);
     border: 1px solid var(--color-border-medium);
     border-radius: var(--radius-sm);
+}
+
+.prop-block input {
+    width: 100%;
+    padding: 8px;
+    font-size: var(--font-size-md);
 }
 
 .prop-block input:focus {
@@ -87,11 +98,6 @@ body {
     flex: 1;
     padding: 4px;
     font-size: 0.9em;
-}
-
-.prop-row button {
-    padding: 4px 8px;
-    white-space: nowrap;
 }
 
 .props-panel,
@@ -119,12 +125,6 @@ body {
     align-items: center;
 }
 
-.toolbar button {
-    padding: 6px 12px;
-    font-size: 0.9em;
-    cursor: pointer;
-}
-
 .main {
     flex: 1;
     display: flex;
@@ -132,14 +132,7 @@ body {
 }
 
 .toggle-button {
-    padding: 0.4em 1em;
-    border: 1px solid #888;
-    background: #eee;
-    color: #333;
-    border-radius: 4px;
-    cursor: pointer;
     margin-left: 10px;
-    transition: background 0.2s;
 }
 
 .toggle-button.active {
@@ -152,7 +145,6 @@ body {
 .left-panel,
 .right-panel {
     width: 220px;
-    background: var(--color-surface-muted);
     padding: 1em;
     box-sizing: border-box;
     border-right: 1px solid var(--color-border-light);
@@ -203,24 +195,13 @@ input[readonly] {
 }
 
 .constraint-action-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin: 4px 0;
-}
-
-.constraint-action-row button {
-    padding: 2px 8px;
-    font-size: 12px;
-    cursor: pointer;
 }
 
 .center-panel {
     flex: 1;
     background: #eeeeee;
-    padding: 1em;
     overflow: auto;
-    box-sizing: border-box;
 }
 
 .list-panel {
@@ -231,6 +212,13 @@ input[readonly] {
 .list-panel h4 {
     margin: 0 0 5px 0;
     font-size: 16px;
+}
+
+.left-panel,
+.right-panel,
+.center-panel {
+    padding: 1em;
+    box-sizing: border-box;
 }
 
 .constraint-info {
@@ -329,14 +317,7 @@ canvas.arrows-bg {
     font-family: monospace;
     font-size: 0.9em;
     padding: 10px;
-    border: 1px solid var(--color-border-medium);
     resize: vertical;
-}
-
-.import-export-controls {
-    display: flex;
-    justify-content: flex-end;
-    gap: 10px;
 }
 
 .modal-overlay {
@@ -360,9 +341,6 @@ canvas.arrows-bg {
 }
 
 .modal-input-row {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     margin: 10px 0;
 }
 
@@ -375,10 +353,14 @@ canvas.arrows-bg {
     margin-left: 10px;
 }
 
+.import-export-controls,
 .modal-button-row {
     display: flex;
     justify-content: flex-end;
     gap: 10px;
+}
+
+.modal-button-row {
     margin-top: 20px;
 }
 
@@ -394,9 +376,6 @@ canvas.arrows-bg {
 }
 
 .list-item {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
     padding: 4px;
     border-bottom: 1px solid var(--color-border-light);
     cursor: pointer;
@@ -412,33 +391,54 @@ canvas.arrows-bg {
     background-color: #e6e6e6;
 }
 
+.left-panel,
+.right-panel,
+.prop-section,
+.list-container {
+    background-color: var(--color-surface-muted);
+}
+
 /* Buttons */
-.button-blue {
-    background-color: #007bff;
-    color: var(--color-white);
-    border: none;
+.btn {
     border-radius: var(--radius-sm);
     padding: 6px 10px;
-    cursor: pointer;
     font-size: var(--font-size-md);
+    cursor: pointer;
     transition: background-color 0.2s;
 }
 
-.button-blue:hover {
+.btn-toolbar {
+    padding: 6px 12px;
+    font-size: 0.9em;
+}
+
+.btn-compact {
+    padding: 4px 8px;
+    white-space: nowrap;
+}
+
+.btn-main {
+    color: var(--color-white);
+    border: none;
+    background-color: #007bff;
+}
+
+.btn-main:hover {
     background-color: #0056b3;
 }
 
-.button-red {
-    background-color: #ff4d4d;
+.btn-warn {
     color: var(--color-white);
     border: none;
-    border-radius: var(--radius-sm);
-    padding: 6px 10px;
-    cursor: pointer;
-    font-size: var(--font-size-md);
-    transition: background-color 0.2s;
+    background-color: #ff4d4d;
 }
 
-.button-red:hover {
+.btn-warn:hover {
     background-color: #cc0000;
+}
+
+.btn-secondary {
+    color: #333;
+    border: 1px solid #888;
+    background: #eee;
 }
