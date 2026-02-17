@@ -56,6 +56,26 @@ pip install pytest
 pytest
 ```
 
+## Frontend E2E tests (Playwright)
+These tests exercise the real browser UI against the FastAPI app.
+
+Install once:
+```bash
+npm install
+npx playwright install chromium
+```
+
+Run E2E suite:
+```bash
+npm run e2e
+```
+
+Useful variants:
+```bash
+npm run e2e:headed
+npm run e2e:ui
+```
+
 ## Contributing
 Contributions are welcome.
 

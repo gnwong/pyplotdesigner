@@ -19,3 +19,5 @@ docs/api/
 *.bak
 *.swp
 *.png
+node_modules/
+test-results/
