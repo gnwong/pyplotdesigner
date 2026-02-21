@@ -7,8 +7,12 @@ README = Path(__file__).parent / "README.md"
 
 setup(
     name='pyplotdesigner',
-    version='0.5.0',
-    packages=find_packages(),
+    version='0.5.1',
+    packages=find_packages(include=['pyplotdesigner', 'pyplotdesigner.*']),
+    include_package_data=True,
+    package_data={
+        'pyplotdesigner.gui': ['webapp/*'],
+    },
     install_requires=[
         'numpy',
         'matplotlib',
