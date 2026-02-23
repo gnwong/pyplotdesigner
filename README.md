@@ -1,4 +1,4 @@
-# pyplotdesigner
+<img alt="pyplotdesigner" src="docs/assets/pyplotdesigner-icon.svg" width="400">
 
 Design matplotlib figure layouts visually, then reuse them in Python.
 
@@ -28,16 +28,16 @@ Optional:
 1. Click **Add Axis**.
 2. Drag boxes into place.
 3. Add constraints (align, match size, aspect ratio, spacing, etc.).
-4. Click **Import/Export** and copy the base64 layout string.
+4. Click **Quick Copy** to copy the code directly to your clipboard or alternatively click **Import/Export** for access to the layout string.
 
 ## 4) Use the exported layout in Python
 ```python
+# following lines will be automatically copied to your clipboard
 from pyplotdesigner.core.design_loader import make_figure_from_b64
-
 layout_b64 = "PASTE_EXPORTED_STRING"
 fig, axes = make_figure_from_b64(layout_b64)
 
-# Example:
+# example usage:
 # left_panel = axes['left_panel']
 # left_panel.plot([0, 1], [0, 1])
 ```
