@@ -2,6 +2,11 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.5.2] - 2026-02-24
+
+### Changed
+- Add logo and improve README explanations.
+
 ## [0.5.1] - 2026-02-21
 
 ### Changed
