@@ -617,6 +617,26 @@ function addPresetConstraint(elementId, type) {
             });
             return;
         }
+
+        case 'matchSize': {
+            startElementSelection('Waiting for input: select element to match dimensions.', reference => {
+                window.constraints.push({
+                    target: { id: elementId, attr: 'width' },
+                    source: { id: reference.id, attr: 'width' },
+                    multiply: 1,
+                    add_before: 0,
+                    add_after: 0
+                });
+                window.constraints.push({
+                    target: { id: elementId, attr: 'height' },
+                    source: { id: reference.id, attr: 'height' },
+                    multiply: 1,
+                    add_before: 0,
+                    add_after: 0
+                });
+            });
+            return;
+        }
     }
 
     sendLayoutUpdate();
@@ -677,7 +697,8 @@ function renderElementConstraintsSection(el) {
         { label: 'Align Left', type: 'alignLeft' },
         { label: 'Align Bottom', type: 'alignBottom' },
         { label: 'Match Width', type: 'matchWidth' },
-        { label: 'Match Height', type: 'matchHeight' }
+        { label: 'Match Height', type: 'matchHeight' },
+        { label: 'Match Dimensions', type: 'matchSize' }
     ];
 
     presets.forEach(preset => {

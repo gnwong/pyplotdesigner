@@ -16,7 +16,10 @@ export type ActionStep =
   | { kind: 'selectElementCanvas'; target: ElementSelector }
   | { kind: 'selectConstantList'; target: { by: 'alias' | 'id'; value: string } }
   | { kind: 'renameSelected'; prop: 'text' | 'id' | 'value'; value: string }
-  | { kind: 'clickPresetConstraint'; name: 'Match Width' | 'Match Height' | 'Align Left' | 'Align Bottom' }
+  | {
+      kind: 'clickPresetConstraint';
+      name: 'Match Width' | 'Match Height' | 'Match Dimensions' | 'Align Left' | 'Align Bottom';
+    }
   | {
       kind: 'addConstraint';
       targetAttr: 'x' | 'y' | 'width' | 'height';
