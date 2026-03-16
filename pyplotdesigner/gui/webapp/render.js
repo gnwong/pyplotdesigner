@@ -4,6 +4,22 @@ import { getConstraintDescription, getNameOfElement, getVariableDescription, con
 import { sendLayoutUpdate, sendDelete, deleteConstant, deleteConstraint } from './api.js';
 import { showToast } from './status.js';
 
+const PRESET_SHORTCUTS = Object.freeze({
+    d: { type: 'matchSize', description: 'Match Dimensions' },
+    w: { type: 'matchWidth', description: 'Match Width' },
+    h: { type: 'matchHeight', description: 'Match Height' },
+    l: { type: 'alignLeft', description: 'Align Left' },
+    b: { type: 'alignBottom', description: 'Align Bottom' }
+});
+
+const PRESET_SHORTCUT_KEY_BY_TYPE = Object.freeze(
+    Object.fromEntries(
+        Object.entries(PRESET_SHORTCUTS).map(([key, preset]) => [preset.type, key])
+    )
+);
+
+let presetHotkeysInitialized = false;
+
 function renderConstantDetail(constant) {
     let props = document.getElementById('props');
     props.innerHTML = `
@@ -642,6 +658,57 @@ function addPresetConstraint(elementId, type) {
     sendLayoutUpdate();
 }
 
+function isTypingTarget(target) {
+    if (!target) {
+        return false;
+    }
+    const tagName = (target.tagName || '').toLowerCase();
+    if (target.isContentEditable) {
+        return true;
+    }
+    return tagName === 'input' || tagName === 'textarea' || tagName === 'select';
+}
+
+function initializePresetHotkeys() {
+    if (presetHotkeysInitialized) {
+        return;
+    }
+
+    document.addEventListener('keydown', (event) => {
+        if (event.defaultPrevented || event.repeat) {
+            return;
+        }
+        if (event.metaKey || event.ctrlKey || event.altKey) {
+            return;
+        }
+        if (isTypingTarget(event.target)) {
+            return;
+        }
+
+        const shortcutKey = (event.key || '').toLowerCase();
+        const preset = PRESET_SHORTCUTS[shortcutKey];
+        if (!preset) {
+            return;
+        }
+
+        const selectedId = getSelectedItem();
+        if (!selectedId) {
+            showToast(`Select an element first, then press "${shortcutKey}".`, { level: 'warn' });
+            return;
+        }
+        const isElementSelected = (window.elements || []).some((element) => String(element.id) === String(selectedId));
+        if (!isElementSelected) {
+            return;
+        }
+
+        event.preventDefault();
+        addPresetConstraint(selectedId, preset.type);
+        showToast(`${preset.description} preset started. Select source element.`, { level: 'info' });
+    });
+
+    presetHotkeysInitialized = true;
+}
+
 function startElementSelection(promptText, callback) {
     runInteractiveAction({
         promptText,
@@ -658,6 +725,7 @@ function startElementSelection(promptText, callback) {
 }
 
 function renderElementConstraintsSection(el) {
+    initializePresetHotkeys();
 
     const container = document.getElementById('constraint-form');
     if (!container) return;
@@ -708,6 +776,10 @@ function renderElementConstraintsSection(el) {
         const button = document.createElement('button');
         button.className = 'btn btn-main';
         button.textContent = preset.label;
+        const shortcutKey = PRESET_SHORTCUT_KEY_BY_TYPE[preset.type];
+        if (shortcutKey) {
+            button.title = `Shortcut: ${shortcutKey.toUpperCase()}`;
+        }
         button.onclick = () => addPresetConstraint(el.dataset.id, preset.type);
 
         wrapper.appendChild(button);
