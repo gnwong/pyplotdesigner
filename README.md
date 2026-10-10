@@ -33,18 +33,26 @@ Optional:
 ## 4) Use the exported layout in Python
 ```python
 # following lines will be automatically copied to your clipboard
-from pyplotdesigner.core.design_loader import make_figure_from_b64
-layout_b64 = "PASTE_EXPORTED_STRING"
-fig, axes = make_figure_from_b64(layout_b64)
+from pyplotdesigner.core.design_loader import load_design, make_figure_from_design
+import_string = "PASTE_EXPORTED_STRING"
+design = load_design(import_string)
+fig, axes = make_figure_from_design(design)
 
 # example usage:
 # left_panel = axes['left_panel']
 # left_panel.plot([0, 1], [0, 1])
 ```
 
+To adjust a named constant from the GUI, insert an edit before the final line:
+```python
+design.get_constant("spacing").value.set(0.4)
+```
+Use the name of a constant that exists in your layout. Rendering solves the
+constraints using its updated value, including dependent subplot spacing.
+
 **Import/Export** and **Quick Copy** now produce gzip-compressed layout strings
 with a `ppd1:` prefix. Compression and decoding happen on the local Python server.
-The GUI and `make_figure_from_b64()` accept both these strings and existing
+The GUI, `load_design()`, and `make_figure_from_b64()` accept both these strings and existing
 uncompressed base64 layouts. Compressed strings require this updated package;
 older installations can still use legacy strings.
 

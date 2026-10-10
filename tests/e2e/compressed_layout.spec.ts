@@ -25,7 +25,10 @@ test('gzip export and Quick Copy preserve the same layout', async ({ page, conte
   await page.getByRole('button', { name: 'Quick Copy' }).click();
   await expect(page.locator('#status-text')).toContainText('Copied Python import snippet');
   const snippet = await page.evaluate(() => navigator.clipboard.readText());
-  expect(snippet).toContain('make_figure_from_b64(import_string)');
+  expect(snippet.split('\n')).toHaveLength(4);
+  expect(snippet).toContain('from pyplotdesigner.core.design_loader import load_design, make_figure_from_design');
+  expect(snippet).toContain('design = load_design(import_string)');
+  expect(snippet).toContain('fig, axes = make_figure_from_design(design)');
   const copied = snippet.match(/import_string = "([^"]+)"/)?.[1];
   expect(copied).toMatch(/^ppd1:/);
   expect(decodeLayoutString(copied!)).toEqual(layout);

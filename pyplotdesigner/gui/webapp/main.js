@@ -88,9 +88,10 @@ function openImportExportModal() {
 
 function getPythonImportSnippet(importString) {
     return [
-        'from pyplotdesigner.core.design_loader import make_figure_from_b64',
+        'from pyplotdesigner.core.design_loader import load_design, make_figure_from_design',
         `import_string = "${importString}"`,
-        'fig, axes = make_figure_from_b64(import_string)'
+        'design = load_design(import_string)',
+        'fig, axes = make_figure_from_design(design)'
     ].join('\n');
 }
 

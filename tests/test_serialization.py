@@ -10,7 +10,9 @@ import pytest
 from fastapi import HTTPException, Request
 
 from pyplotdesigner.core.design import Design
-from pyplotdesigner.core.design_loader import make_figure_from_b64
+from pyplotdesigner.core.design_loader import (
+    load_design, make_figure_from_b64, make_figure_from_design,
+)
 from pyplotdesigner.core.serialization import decode_layout, encode_layout
 from pyplotdesigner.gui.main import export_layout, import_layout
 
@@ -52,6 +54,31 @@ def test_python_export_keeps_legacy_default():
     loaded = Design()
     loaded.load(compressed)
     assert loaded.is_equivalent_to(design)
+
+
+@pytest.mark.parametrize('compressed', [False, True])
+def test_edit_loaded_constant_before_rendering(compressed):
+    original = load_design(encode_layout(sample_layout()))
+    first = original.get_element('axis-0')
+    neighbor = original.add_element(id='axis-1', type='axis', text='neighbor')
+    gap = original.get_constant('gap')
+    original.add_constraint(neighbor.x, first.right, add_after=gap.value)
+    original.solve()
+
+    design = load_design(original.get_b64_string(compressed=compressed))
+    assert isinstance(design, Design)
+    assert design.get_element('axis-1').x.get() == pytest.approx(1.75)
+    design.get_constant('gap').value.set(0.4)
+    fig, axes = make_figure_from_design(design, dpi=160)
+    try:
+        assert fig.dpi == 160
+        assert axes['温度'].get_position().width == pytest.approx(0.8 / 6)
+        assert axes['neighbor'].get_position().x0 == pytest.approx(1.45 / 6)
+        assert design.get_element('axis-0').width.get() == pytest.approx(0.8)
+        assert design.get_element('axis-1').x.get() == pytest.approx(1.45)
+        assert original.get_constant('gap').value.get() == 0.5
+    finally:
+        plt.close(fig)
 
 
 def request_with_json(payload):

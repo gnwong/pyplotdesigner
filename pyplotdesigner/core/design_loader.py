@@ -24,6 +24,21 @@ import matplotlib.pyplot as plt
 from pyplotdesigner.core.design import Design
 
 
+def load_design(import_string):
+    """
+    Decode a layout string into a Design that can be edited before rendering.
+
+    Accepts legacy base64 JSON and ppd1: gzip layout strings. Constraints are
+    solved when make_figure_from_design() creates the figure.
+
+    :arg import_string: legacy or compressed layout string
+    :return: Design
+    """
+    design = Design()
+    design.load(import_string)
+    return design
+
+
 def make_figure_from_b64(json_b64, **kwargs):
     """
     Decode a legacy base64 JSON or ppd1: gzip string representing a design layout,
@@ -34,11 +49,7 @@ def make_figure_from_b64(json_b64, **kwargs):
     :return: (Figure, Dict[str, Axes])
     """
 
-    design = Design()
-    design.load(json_b64)
-    design.solve()
-
-    return make_figure_from_design(design, **kwargs)
+    return make_figure_from_design(load_design(json_b64), **kwargs)
 
 
 def make_figure_from_design(design, **kwargs):
