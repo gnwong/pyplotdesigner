@@ -1,5 +1,5 @@
 import argparse
-from fastapi import FastAPI, Request
+from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from fastapi.middleware.cors import CORSMiddleware
@@ -9,6 +9,7 @@ import webbrowser
 import uvicorn
 
 from pyplotdesigner.gui.handlers import handle_update_layout
+from pyplotdesigner.core.serialization import decode_layout, encode_layout
 
 app = FastAPI()
 
@@ -32,6 +33,24 @@ async def root():
 async def update_layout(request: Request):
     data = await request.json()
     return handle_update_layout(data)
+
+
+@app.post("/api/export_layout")
+async def export_layout(request: Request):
+    try:
+        return {"layout_string": encode_layout(await request.json(), compressed=True)}
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+
+
+@app.post("/api/import_layout")
+async def import_layout(request: Request):
+    try:
+        data = await request.json()
+        serialized = data.get('layout_string') if isinstance(data, dict) else None
+        return decode_layout(serialized)
+    except ValueError as exc:
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
 
 
 def main():

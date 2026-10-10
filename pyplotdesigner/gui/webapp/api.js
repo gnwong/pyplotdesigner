@@ -5,6 +5,30 @@ import { getImageCoords } from './canvas.js';
 
 let layoutRequestQueue = Promise.resolve();
 
+async function requestLayoutCodec(endpoint, payload) {
+    const response = await fetch(endpoint, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    });
+    const data = await response.json();
+    if (!response.ok) {
+        throw new Error(data.detail || 'Layout request failed');
+    }
+    return data;
+}
+
+export async function exportLayoutString() {
+    await layoutRequestQueue;
+    const data = await requestLayoutCodec('/api/export_layout', getLayoutPayload());
+    return data.layout_string;
+}
+
+export async function importLayoutString(serialized) {
+    await layoutRequestQueue;
+    return requestLayoutCodec('/api/import_layout', { layout_string: serialized });
+}
+
 function queueLayoutRequest(payload) {
     layoutRequestQueue = layoutRequestQueue
         .catch(() => {

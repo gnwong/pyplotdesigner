@@ -42,6 +42,15 @@ fig, axes = make_figure_from_b64(layout_b64)
 # left_panel.plot([0, 1], [0, 1])
 ```
 
+**Import/Export** and **Quick Copy** now produce gzip-compressed layout strings
+with a `ppd1:` prefix. Compression and decoding happen on the local Python server.
+The GUI and `make_figure_from_b64()` accept both these strings and existing
+uncompressed base64 layouts. Compressed strings require this updated package;
+older installations can still use legacy strings.
+
+For Python exports, `design.get_b64_string()` retains its legacy format.
+Use `design.get_b64_string(compressed=True)` for compressed output.
+
 ## If you need to: clone and install locally
 ```bash
 git clone git@github.com:gnwong/pyplotdesigner.git

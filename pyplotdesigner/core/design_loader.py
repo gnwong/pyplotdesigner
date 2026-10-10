@@ -26,10 +26,10 @@ from pyplotdesigner.core.design import Design
 
 def make_figure_from_b64(json_b64, **kwargs):
     """
-    Decode a base64-encoded JSON string representing a design layout,
+    Decode a legacy base64 JSON or ppd1: gzip string representing a design layout,
     build the Design object, and return a matplotlib Figure and Axes.
 
-    :arg json_b64: base64-encoded JSON string
+    :arg json_b64: legacy base64 JSON or a ppd1: gzip layout string
     :arg kwargs: additional keyword arguments for matplotlib figure creation
     :return: (Figure, Dict[str, Axes])
     """

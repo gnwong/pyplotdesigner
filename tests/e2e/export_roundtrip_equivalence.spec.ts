@@ -1,4 +1,5 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Page } from '@playwright/test';
+import { decodeLayoutString } from './layout_serialization';
 
 type LayoutValueRef = {
   id: string | null;
@@ -141,8 +142,7 @@ function elementRef(id: string, attr: string): LayoutValueRef {
 }
 
 function decodeLayout(serialized: string): LayoutPayload {
-  const decoded = Buffer.from(serialized, 'base64').toString('utf8');
-  return JSON.parse(decoded) as LayoutPayload;
+  return decodeLayoutString(serialized) as LayoutPayload;
 }
 
 function encodeLayout(payload: LayoutPayload): string {
@@ -239,7 +239,7 @@ function buildLayoutFromCommands(commands: LayoutCommand[]): LayoutPayload {
   return payload;
 }
 
-async function solveLayoutViaApi(page: Parameters<typeof test>[0]['page'], payload: LayoutPayload): Promise<LayoutPayload> {
+async function solveLayoutViaApi(page: Page, payload: LayoutPayload): Promise<LayoutPayload> {
   const response = await page.request.post('/api/update_layout', { data: payload });
   expect(response.ok()).toBeTruthy();
 
@@ -259,7 +259,7 @@ async function solveLayoutViaApi(page: Parameters<typeof test>[0]['page'], paylo
   };
 }
 
-async function importLayout(page: Parameters<typeof test>[0]['page'], serialized: string): Promise<void> {
+async function importLayout(page: Page, serialized: string): Promise<void> {
   await page.getByRole('button', { name: 'Import/Export' }).click();
   const modal = page.locator('.import-export-modal');
   await expect(modal).toBeVisible();
@@ -268,10 +268,11 @@ async function importLayout(page: Parameters<typeof test>[0]['page'], serialized
   await expect(modal).toHaveCount(0);
 }
 
-async function exportLayout(page: Parameters<typeof test>[0]['page']): Promise<string> {
+async function exportLayout(page: Page): Promise<string> {
   await page.getByRole('button', { name: 'Import/Export' }).click();
   const modal = page.locator('.import-export-modal');
   await expect(modal).toBeVisible();
+  await expect(modal.locator('.import-export-textarea')).toHaveValue(/^ppd1:/);
   const serialized = await modal.locator('.import-export-textarea').inputValue();
   await modal.getByRole('button', { name: 'Close' }).click();
   await expect(modal).toHaveCount(0);

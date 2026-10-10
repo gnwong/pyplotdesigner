@@ -1,6 +1,7 @@
 import { expect, test } from '@playwright/test';
 import { ACTION_SEQUENCE_SCENARIOS } from './action_sequences.fixtures';
 import { runActionScenario } from './action_sequence_runner';
+import { decodeLayoutString } from './layout_serialization';
 
 test.describe.configure({ retries: 1 });
 
@@ -37,10 +38,12 @@ for (const scenario of SCENARIOS_TO_RUN) {
     const exported = await runActionScenario(page, scenario);
 
     if (process.env.PRINT_ACTION_SEQUENCE_EXPORTS === '1') {
-      // Temporary capture mode for bootstrapping new exact fixtures.
-      console.log(`ACTION_SEQUENCE_EXPORT ${scenario.name} ${exported}`);
+      // Keep captured fixtures in the legacy format for compatibility coverage.
+      const legacy = Buffer.from(JSON.stringify(decodeLayoutString(exported)), 'utf8').toString('base64');
+      console.log(`ACTION_SEQUENCE_EXPORT ${scenario.name} ${legacy}`);
     }
 
-    expect(exported).toBe(scenario.expectedExport);
+    expect(exported).toMatch(/^ppd1:/);
+    expect(decodeLayoutString(exported)).toEqual(decodeLayoutString(scenario.expectedExport));
   });
 }

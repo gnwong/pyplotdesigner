@@ -1,7 +1,7 @@
 import { canvas, setSelectedItem, setScale, setFigureSize } from './shared.js';
 import { restorePanelSizes, toggleDarkMode, setupResizablePanels } from './ui.js';
 import { drawGrid, openLayoutModal } from './canvas.js';
-import { sendAdd, sendLayoutUpdate, getLayoutPayload, processReceivedPayload } from './api.js'
+import { sendAdd, sendLayoutUpdate, exportLayoutString, importLayoutString, processReceivedPayload } from './api.js'
 import { renderLayout, updateElementFromProps } from './render.js'
 import { updateConstantFromProps } from './constants.js';
 import { initializeStatusBar, showToast } from './status.js';
@@ -42,7 +42,8 @@ function openImportExportModal() {
 
     const textarea = document.createElement('textarea');
     textarea.className = 'import-export-textarea';
-    textarea.value = getImportString();
+    textarea.placeholder = 'Preparing layout string...';
+    textarea.disabled = true;
 
     const closeButton = document.createElement('button');
     closeButton.textContent = 'Close';
@@ -52,13 +53,17 @@ function openImportExportModal() {
     const importButton = document.createElement('button');
     importButton.textContent = 'Import';
     importButton.className = 'btn btn-main';
-    importButton.onclick = () => {
+    importButton.disabled = true;
+    importButton.onclick = async () => {
+        importButton.disabled = true;
         try {
-            const data = JSON.parse(atob(textarea.value));
+            const data = await importLayoutString(textarea.value);
             processReceivedPayload(data);
             modal.remove();
         } catch (err) {
             alert('Unable to load layout: ' + err.message);
+        } finally {
+            importButton.disabled = false;
         }
     };
 
@@ -70,10 +75,15 @@ function openImportExportModal() {
     modal.appendChild(textarea);
     modal.appendChild(controls);
     document.body.appendChild(modal);
-}
-
-function getImportString() {
-    return btoa(JSON.stringify(getLayoutPayload()));
+    exportLayoutString().then(serialized => {
+        textarea.value = serialized;
+    }).catch(err => {
+        showToast('Unable to export layout: ' + err.message, { level: 'error' });
+    }).finally(() => {
+        textarea.disabled = false;
+        importButton.disabled = false;
+        textarea.placeholder = 'Paste a layout string to import';
+    });
 }
 
 function getPythonImportSnippet(importString) {
@@ -85,7 +95,7 @@ function getPythonImportSnippet(importString) {
 }
 
 async function copyPythonSnippetToClipboard() {
-    const importString = getImportString();
+    const importString = await exportLayoutString();
     const snippet = getPythonImportSnippet(importString);
     if (navigator.clipboard && window.isSecureContext) {
         await navigator.clipboard.writeText(snippet);

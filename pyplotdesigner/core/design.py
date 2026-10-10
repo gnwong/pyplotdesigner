@@ -23,9 +23,9 @@ THE SOFTWARE.
 import keyword
 import re
 import json
-import base64
 
 from .models import Variable, Element, Constant, SetValueConstraint
+from .serialization import decode_layout, encode_layout
 
 
 class Design:
@@ -370,11 +370,11 @@ class Design:
 
     def load(self, b64string):
         """
-        Load a Design instance from a base64-encoded JSON string.
+        Load a Design from legacy base64 JSON or a ppd1: gzip layout string.
 
-        :arg b64string: base64-encoded JSON string representing the design
+        :arg b64string: legacy or compressed layout string representing the design
         """
-        self.from_json_string(base64.b64decode(b64string).decode('utf-8'))
+        self.from_json_string(json.dumps(decode_layout(b64string)))
 
     def from_json_string(self, json_str):
         """
@@ -451,14 +451,15 @@ class Design:
 
         return json.dumps(payload, indent=None, separators=(',', ':'))
 
-    def get_b64_string(self):
+    def get_b64_string(self, compressed=False):
         """
-        Get the base64-encoded JSON string representation of the design.
+        Get a layout string, optionally using versioned gzip compression.
 
-        :return: base64-encoded JSON string
+        :arg compressed: (default=False) retain legacy output unless requested
+
+        :return: legacy base64 JSON or a ppd1: gzip layout string
         """
-        json_str = self.get_json_string()
-        return base64.b64encode(json_str.encode('utf-8')).decode('utf-8')
+        return encode_layout(json.loads(self.get_json_string()), compressed=compressed)
 
     # constant utilities
 

@@ -229,6 +229,7 @@ async function exportLayout(page: Page): Promise<string> {
   await page.getByRole('button', { name: 'Import/Export' }).click();
   const modal = page.locator('.import-export-modal');
   await expect(modal).toBeVisible();
+  await expect(modal.locator('.import-export-textarea')).toHaveValue(/^ppd1:/);
   const serialized = await modal.locator('.import-export-textarea').inputValue();
   await modal.getByRole('button', { name: 'Close' }).click();
   await expect(modal).toHaveCount(0);
