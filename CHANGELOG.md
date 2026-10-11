@@ -2,6 +2,20 @@
 
 All notable changes to this project are documented in this file.
 
+## [0.6.0] - 2026-10-11
+
+### Added
+- Added `load_design()` and `make_figure_from_design()` so exported layouts can be edited in Python before rendering.
+- Added a Match Dimensions preset and keyboard shortcuts for matching dimensions and aligning axes.
+- Added user guides, a runnable worked example, and an API reference with Read the Docs build configuration.
+
+### Changed
+- Import/Export and Quick Copy now produce gzip-compressed layout strings with a `ppd1:` prefix. Legacy base64 layouts remain supported, and `design.get_b64_string()` retains its legacy output by default.
+- Quick Copy now exposes the design object before figure creation, allowing named constants to be changed locally.
+
+### Fixed
+- Fixed constraint descriptions showing `undefined` instead of constant names.
+
 ## [0.5.2] - 2026-02-24
 
 ### Changed
