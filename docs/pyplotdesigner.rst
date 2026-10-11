@@ -1,10 +1,6 @@
-pyplotdesigner package
-======================
+:orphan:
 
-Module contents
----------------
+Python API
+==========
 
-.. automodule:: pyplotdesigner
-   :members:
-   :undoc-members:
-   :show-inheritance:
+The package reference is available in :doc:`modules`.

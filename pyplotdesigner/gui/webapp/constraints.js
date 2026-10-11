@@ -1,5 +1,5 @@
 export function getNameOfElement(id) {
-    const element = document.querySelector(`[data-id="${id}"]`);
+    const element = document.querySelector(`#canvas .draggable[data-id="${id}"]`);
     if (element) {
         return element.dataset.text;
     }

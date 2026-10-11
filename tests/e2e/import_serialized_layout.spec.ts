@@ -80,6 +80,10 @@ test('reset then import serialized layout string and verify imported state', asy
     expect(constantsListText).toContain(constant.id);
   }
 
+  // Constant references must retain their names when rendered as constraints.
+  await expect(page.locator('#constraints-list')).not.toContainText('undefined');
+  await expect(page.locator('#constraints-list')).toContainText('h_spacing');
+
   await page.getByRole('button', { name: 'Import/Export' }).click();
   await expect(page.locator('.import-export-modal .import-export-textarea')).toHaveValue(/^ppd1:/);
   const exportedSerializedLayout = await page

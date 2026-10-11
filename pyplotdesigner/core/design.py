@@ -604,7 +604,14 @@ class Design:
         """
         Register a new layout element in the design.
 
-        :arg element: the layout element to track
+        :arg id: identifier for the element
+        :arg type: element type, such as 'axis'
+        :arg x: lower-left x position in inches (default=0.0)
+        :arg y: lower-left y position in inches (default=0.0)
+        :arg width: width in inches (default=1.0)
+        :arg height: height in inches (default=1.0)
+        :arg text: axis name used as the rendering dictionary key; defaults to id for axes
+        :return: the newly created Element
         """
         if text is None and type == 'axis':
             text = id
@@ -623,8 +630,8 @@ class Design:
         :arg target: the target element attribute to set (e.g., x, y, width, height)
         :arg source: the source element attribute to use as input (optional)
         :arg multiply: (default=1.0) multiplier for the source and add_before values
-        :arg add_before: (default=0.0) value to add before the source value
-        :arg add_after: (default=0.0) value to add after the source value
+        :arg add_before: (default=0.0) value added to the source before multiplication
+        :arg add_after: (default=0.0) value added after multiplication
         """
         constraint = SetValueConstraint(
             target=target, source=source,

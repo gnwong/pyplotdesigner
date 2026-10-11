@@ -29,9 +29,11 @@ class Variable:
         self.attr = attr
 
     def get(self):
+        """Return the current value of the referenced property."""
         return getattr(self.owner, self.attr)
 
     def set(self, value):
+        """Set the referenced property; solving may overwrite constrained values."""
         setattr(self.owner, self.attr, value)
 
     def to_dict(self):

@@ -19,6 +19,7 @@ docs/api/
 *.bak
 *.swp
 *.png
+!docs/assets/two-panels-gui.png
 node_modules/
 test-results/
 !tests/e2e/*.spec.ts-snapshots/

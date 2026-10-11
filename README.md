@@ -4,6 +4,8 @@ Design matplotlib figure layouts visually, then reuse them in Python.
 
 PyPI package: https://pypi.org/project/pyplotdesigner/
 
+Documentation: [pyplotdesigner on Read the Docs](https://pyplotdesigner.readthedocs.io/en/latest/)
+
 ## Quickstart (recommended: PyPI)
 
 ## 1) Install with pip
@@ -50,14 +52,20 @@ design.get_constant("spacing").value.set(0.4)
 Use the name of a constant that exists in your layout. Rendering solves the
 constraints using its updated value, including dependent subplot spacing.
 
-**Import/Export** and **Quick Copy** now produce gzip-compressed layout strings
+**Import/Export** and **Quick Copy** produce gzip-compressed layout strings
 with a `ppd1:` prefix. Compression and decoding happen on the local Python server.
 The GUI, `load_design()`, and `make_figure_from_b64()` accept both these strings and existing
-uncompressed base64 layouts. Compressed strings require this updated package;
+uncompressed base64 layouts. Compressed strings require pyplotdesigner 0.6.0 or newer;
 older installations can still use legacy strings.
 
 For Python exports, `design.get_b64_string()` retains its legacy format.
 Use `design.get_b64_string(compressed=True)` for compressed output.
+
+## Figure size and font sizes
+
+Saving with `fig.savefig('my_figure.pdf', bbox_inches='tight')` automatically expands the saved bounding box to include labels and other content outside the nominal figure boundary, and trims unused outer space. You do not need to fit everything within the figure size chosen in the designer; the axes keep their physical sizes and spacing.
+
+If you need a specific publication width, design at that final size and keep labels within its boundary. Save without tight cropping (`matplotlib.rcParams['savefig.bbox'] = None` if your settings enable it by default), then place the figure at its original physical size. This lets you choose font sizes directly in points: 10-point text remains 10-point text. Resizing the image afterward scales the text too. See [designing layouts](https://pyplotdesigner.readthedocs.io/en/latest/designing-layouts.html) for more detail.
 
 ## If you need to: clone and install locally
 ```bash
@@ -92,6 +100,20 @@ Useful variants:
 npm run e2e:headed
 npm run e2e:ui
 ```
+
+## Documentation
+
+The documentation source is in `docs/`. Build and check it locally with:
+
+```bash
+python -m pip install -e .
+python -m pip install -r docs/requirements.txt
+python -m sphinx -b html -W --keep-going docs docs/_build/html
+python -m sphinx -b doctest -W --keep-going docs docs/_build/doctest
+```
+
+Open `docs/_build/html/index.html` for the guides, worked example, and API reference.
+See [the docs build guide](docs/contributing-docs.rst) for editing and local build instructions.
 
 ## Contributing
 Contributions are welcome.

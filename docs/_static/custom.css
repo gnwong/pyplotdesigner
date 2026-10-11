@@ -1,0 +1,5 @@
+/* Keep the mobile title and menu visible on the pale logo background. */
+.wy-nav-top,
+.wy-nav-top a {
+    color: #1c384e;
+}
